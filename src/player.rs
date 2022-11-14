@@ -21,6 +21,7 @@ pub struct Player {
     right_textures: Vec<Texture2D>,
     update_interval: i32,
     cur_frame: usize,
+    pub rect: Rect,
 }
 
 impl Player {
@@ -60,16 +61,9 @@ impl Player {
             right_textures: right_sprites,
             update_interval: 0,
             cur_frame: 0,
+            rect: Rect::new(0.0, 0.0, 50.0,50.0),
         }
     }
-
-    // pub fn center_x(&mut self) -> f32 {
-    //     self.up_textures[0].width() / 2.0 + self.x
-    // }
-
-    // pub fn center_y(&mut self) -> f32 {
-    //     self.up_textures[0].height() / 2.0 + self.y
-    // }
 
     pub fn draw(&mut self) {
         self.update_interval += 1;
@@ -95,5 +89,9 @@ impl Player {
                 draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
             },
         }
+
+        // define rect
+        self.rect.x = self.x;
+        self.rect.y = self.y;
     }
 }

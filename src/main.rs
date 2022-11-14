@@ -1,4 +1,4 @@
-use macroquad::{prelude::*};
+use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
 
 mod settings;
 use settings::*;
@@ -14,6 +14,9 @@ use player::*;
 
 mod coin;
 use coin::*;
+
+mod res;
+use res::*;
 
 pub enum GameState {
     Game,
@@ -34,6 +37,26 @@ fn window_conf() -> Conf {
         window_height: RES_HEIGHT,
         ..Default::default()
     }
+}
+
+pub fn draw_score(font: Font, score: &str) {
+    draw_text_ex("SCORE: ", 7.0, 40.0, 
+        TextParams {
+            font,
+            font_size: 50,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+
+    draw_text_ex(score, 250.0, 40.0, 
+        TextParams {
+            font,
+            font_size: 50,
+            color: MAGENTA,
+            ..Default::default()
+        },
+    );
 }
 
 fn can_go_to(y: f32, x: f32, level_num: i32) -> bool {
@@ -63,6 +86,7 @@ async fn main() {
     let mut player = Player::new().await;
     let mut small_coins: Vec<Coin> = Vec::new();
     let mut big_coins: Vec<Coin> = Vec::new();
+    let resources = Resources::new().await;
 
     let pog = 1.0;
     
@@ -81,6 +105,8 @@ async fn main() {
 
             GameState::InitLevel => {
                 map.lvl_num = game.level_num;
+                big_coins.clear();
+                small_coins.clear();
                 
                 // load coins
                 let lvl = match game.level_num {
@@ -110,18 +136,20 @@ async fn main() {
                     y += 50.0;
                     x = 0.0;
                 }
+
                 game_state = GameState::Game;
             }
 
             GameState::LevelCompleted => {
                 if is_key_pressed(KeyCode::Space) {
-                    map.lvl_num += 1;
-                    game_state = GameState::Game;
+                    game.level_num += 1;
+                    game_state = GameState::InitLevel;
                 }
             }
 
             GameState::Game => {
                 map.draw();
+                draw_score(resources.font,&game.score.to_string());
 
                 if is_key_down(KeyCode::Left) {
                     player.requested_dir = Dir::Left;
@@ -193,20 +221,53 @@ async fn main() {
                     },
                 }
 
-                // DEBUG
-                //println!("{} {}", player.x, player.y);
-
                 for coin in &mut small_coins {
                     coin.draw();
+
+                    if let Some(_i) = coin.rect.intersect(player.rect) {
+                        coin.destroyed = true;
+                        game.score += 10;
+                        play_sound(resources.coin, PlaySoundParams {
+                            looped: false,
+                            volume: 0.2,
+                        });
+                    }
                 }
 
                 for coin in &mut big_coins {
                     coin.draw();
+
+                    if let Some(_i) = coin.rect.intersect(player.rect) {
+                        coin.destroyed = true;
+                        game.score += 50;
+                        play_sound(resources.bonus, PlaySoundParams {
+                            looped: false,
+                            volume: 0.2,
+                        });
+                    }
                 }
 
                 player.draw();
+
+                if small_coins.len() == 0 {
+                    game_state = GameState::LevelCompleted;
+                }
             }
         }
+
+        match small_coins.iter().position(|x| x.destroyed == true) {
+            Some(idx) => {
+                small_coins.remove(idx);
+            },
+            None => {},
+        };
+
+        match big_coins.iter().position(|x| x.destroyed == true) {
+            Some(idx) => {
+                big_coins.remove(idx);
+            },
+            None => {},
+        };
 
         next_frame().await
     }
