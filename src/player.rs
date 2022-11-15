@@ -1,20 +1,27 @@
 use macroquad::prelude::*;
 
-const ANIMATION_SPEED: i32 = 8;
-pub const STEP_MOVE: f32 = 5.0;
+use crate::settings::RES_WIDTH;
 
-pub enum Dir {
+const ANIMATION_SPEED: i32 = 8;
+pub const PLAYER_STEP_MOVE: f32 = 5.0;
+
+pub enum PlayerDir {
     Up,
     Down,
     Left,
     Right,
 }
 
+pub enum Status {
+    Playing,
+    Died,
+}
+
 pub struct Player {
     pub x: f32,
     pub y: f32, 
-    pub dir: Dir,
-    pub requested_dir: Dir,
+    pub dir: PlayerDir,
+    pub requested_dir: PlayerDir,
     up_textures: Vec<Texture2D>,
     down_textures: Vec<Texture2D>,
     left_textures: Vec<Texture2D>,
@@ -22,6 +29,7 @@ pub struct Player {
     update_interval: i32,
     cur_frame: usize,
     pub rect: Rect,
+    pub status: Status,
 }
 
 impl Player {
@@ -53,8 +61,8 @@ impl Player {
         Self {
             x: 550.0,
             y: 650.0,
-            dir: Dir::Left,
-            requested_dir: Dir::Left,
+            dir: PlayerDir::Left,
+            requested_dir: PlayerDir::Left,
             up_textures: up_sprites,
             down_textures: down_sprites,
             left_textures: left_sprites,
@@ -62,36 +70,52 @@ impl Player {
             update_interval: 0,
             cur_frame: 0,
             rect: Rect::new(0.0, 0.0, 50.0,50.0),
+            status: Status::Playing,
+        }
+    }
+
+    pub fn draw_lives(&mut self, num_of_lives: i32) {
+        let ly = 0.0;
+        for i in 0..num_of_lives {
+            let lx = (RES_WIDTH as f32 - 50.0) - i as f32 * 50.0;
+            draw_texture(self.right_textures[1], lx, ly, WHITE);
         }
     }
 
     pub fn draw(&mut self) {
-        self.update_interval += 1;
-        if self.update_interval > ANIMATION_SPEED {
-            self.update_interval = 0;
-            self.cur_frame += 1;
-            if self.cur_frame == self.up_textures.len() {
-                self.cur_frame = 0;
-            }
-        }
+        match self.status {
+            Status::Playing => {
+                self.update_interval += 1;
+                if self.update_interval > ANIMATION_SPEED {
+                    self.update_interval = 0;
+                    self.cur_frame += 1;
+                    if self.cur_frame == self.up_textures.len() {
+                        self.cur_frame = 0;
+                    }
+                }
 
-        match self.dir {
-            Dir::Up => {
-                draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                match self.dir {
+                    PlayerDir::Up => {
+                        draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    PlayerDir::Down => {
+                        draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    PlayerDir::Left => {
+                        draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    PlayerDir::Right => {
+                        draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                }
+
+                // define rect
+                self.rect.x = self.x;
+                self.rect.y = self.y;
             },
-            Dir::Down => {
-                draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
-            },
-            Dir::Left => {
-                draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
-            },
-            Dir::Right => {
-                draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+            Status::Died => {
+                 
             },
         }
-
-        // define rect
-        self.rect.x = self.x;
-        self.rect.y = self.y;
     }
 }

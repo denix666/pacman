@@ -9,8 +9,8 @@ pub struct Coin {
 }
 
 impl Coin {
-    pub async fn new(x:f32, y:f32, brick_type: &str)  -> Self {
-        let path = format!("assets/images/{}_coin.png",brick_type);
+    pub async fn new(x:f32, y:f32, coin_type: &str)  -> Self {
+        let path = format!("assets/images/{}_coin.png",coin_type);
         Self {
             x,
             y,
@@ -21,12 +21,10 @@ impl Coin {
     }
 
     pub fn draw(&mut self) {
-        if !self.destroyed {
-            draw_texture(self.texture, self.x, self.y, WHITE);
+        draw_texture(self.texture, self.x, self.y, WHITE);
 
-            // define rect
-            self.rect.x = self.x + 10.0;
-            self.rect.y = self.y + 10.0;
-        }
+        // define rect
+        self.rect.x = self.x + 10.0;
+        self.rect.y = self.y + 10.0;
     }
 }

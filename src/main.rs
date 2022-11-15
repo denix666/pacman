@@ -1,5 +1,8 @@
 use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
 
+extern crate rand;
+use rand::{Rng};
+
 mod settings;
 use settings::*;
 
@@ -18,11 +21,18 @@ use coin::*;
 mod res;
 use res::*;
 
+mod messages;
+use messages::*;
+
+mod enemy;
+use enemy::*;
+
 pub enum GameState {
     Game,
     Intro,
     InitLevel,
     LevelCompleted,
+    LevelFailed,
 }
 
 fn window_conf() -> Conf {
@@ -37,26 +47,6 @@ fn window_conf() -> Conf {
         window_height: RES_HEIGHT,
         ..Default::default()
     }
-}
-
-pub fn draw_score(font: Font, score: &str) {
-    draw_text_ex("SCORE: ", 7.0, 40.0, 
-        TextParams {
-            font,
-            font_size: 50,
-            color: WHITE,
-            ..Default::default()
-        },
-    );
-
-    draw_text_ex(score, 250.0, 40.0, 
-        TextParams {
-            font,
-            font_size: 50,
-            color: MAGENTA,
-            ..Default::default()
-        },
-    );
 }
 
 fn can_go_to(y: f32, x: f32, level_num: i32) -> bool {
@@ -86,6 +76,7 @@ async fn main() {
     let mut player = Player::new().await;
     let mut small_coins: Vec<Coin> = Vec::new();
     let mut big_coins: Vec<Coin> = Vec::new();
+    let mut enemies: Vec<Enemy> = Vec::new();
     let resources = Resources::new().await;
 
     let pog = 1.0;
@@ -95,11 +86,35 @@ async fn main() {
 
         match game_state {
             GameState::Intro => {
+                draw_texture(resources.intro_texture, 0.0, 0.0, WHITE);
+                show_intro_text(resources.font);
+
                 if is_key_pressed(KeyCode::Space) {
                     game.score = 0;
                     game.lives = 2;
                     game.level_num = 1;
                     game_state = GameState::InitLevel;
+                }
+            }
+
+            GameState::LevelFailed => {
+                map.draw();
+                player.status = Status::Died;
+                player.draw();
+                player.draw_lives(game.lives);
+                draw_score(resources.font,&game.score.to_string());
+                
+
+                if is_key_pressed(KeyCode::Space) {
+                    if game.lives > 0 {
+                        game.lives -= 1;
+                        player.x = 550.0;
+                        player.y = 650.0;
+                        player.status = Status::Playing;
+                        game_state = GameState::Game;
+                    } else {
+                        // gameover
+                    }
                 }
             }
 
@@ -124,12 +139,12 @@ async fn main() {
                         if value == 0 {
                             small_coins.push(
                                 Coin::new(x, y, "small").await,
-                            )
+                            );
                         }
                         if value == 2 {
                             big_coins.push(
                                 Coin::new(x, y, "big").await,
-                            )
+                            );
                         }
                         x += 50.0;
                     }
@@ -137,10 +152,38 @@ async fn main() {
                     x = 0.0;
                 }
 
+                // load enemies
+                let mut item_placed_successfully: bool;
+                for _ in 1..=STARTING_AMOUNT_OF_ENEMY + game.level_num {
+                    item_placed_successfully = false;
+                    while !item_placed_successfully {
+                        let y = rand::thread_rng().gen_range(0..=10);
+                        let x = rand::thread_rng().gen_range(0..=22);
+                        
+                        if lvl[y as usize][x as usize] == 0 {
+                            let mut enemy_in_this_place_already_exist = false;
+                            for en in &mut enemies {
+                                if en.x == x as f32 * 50.0 && en.y == y as f32 * 50.0 {
+                                    enemy_in_this_place_already_exist = true;
+                                    break;
+                                }
+                            }
+                            if !enemy_in_this_place_already_exist {
+                                enemies.push(
+                                    Enemy::new(x as f32 * 50.0, y as f32 * 50.0).await,
+                                );
+                                item_placed_successfully = true;
+                            }
+                        }
+                    }
+                }
+
                 game_state = GameState::Game;
             }
 
             GameState::LevelCompleted => {
+                map.draw();
+                show_level_completed_text(resources.font);
                 if is_key_pressed(KeyCode::Space) {
                     game.level_num += 1;
                     game_state = GameState::InitLevel;
@@ -152,71 +195,71 @@ async fn main() {
                 draw_score(resources.font,&game.score.to_string());
 
                 if is_key_down(KeyCode::Left) {
-                    player.requested_dir = Dir::Left;
+                    player.requested_dir = PlayerDir::Left;
                 }
 
                 if is_key_down(KeyCode::Right) {
-                    player.requested_dir = Dir::Right;
+                    player.requested_dir = PlayerDir::Right;
                 }
 
                 if is_key_down(KeyCode::Up) {
-                    player.requested_dir = Dir::Up;
+                    player.requested_dir = PlayerDir::Up;
                 }
 
                 if is_key_down(KeyCode::Down) {
-                    player.requested_dir = Dir::Down;
+                    player.requested_dir = PlayerDir::Down;
                 }
 
                 match player.requested_dir {
-                    Dir::Up => {
+                    PlayerDir::Up => {
                         if player.x % 50.0 == 0.0 {
-                            if can_go_to(player.x, player.y - STEP_MOVE, game.level_num) {
-                                player.dir = Dir::Up;
+                            if can_go_to(player.x, player.y - PLAYER_STEP_MOVE, game.level_num) {
+                                player.dir = PlayerDir::Up;
                             }
                         }
                     },
-                    Dir::Down => {
+                    PlayerDir::Down => {
                         if player.x % 50.0 == 0.0 {
-                            if can_go_to(player.x, player.y + 50.0 + STEP_MOVE - pog, game.level_num) {
-                                player.dir = Dir::Down;
+                            if can_go_to(player.x, player.y + 50.0 + PLAYER_STEP_MOVE - pog, game.level_num) {
+                                player.dir = PlayerDir::Down;
                             }
                         }
                     },
-                    Dir::Left => {
+                    PlayerDir::Left => {
                         if player.y % 50.0 == 0.0 {
-                            if can_go_to(player.x - STEP_MOVE, player.y, game.level_num) {
-                                player.dir = Dir::Left;
+                            if can_go_to(player.x - PLAYER_STEP_MOVE, player.y, game.level_num) {
+                                player.dir = PlayerDir::Left;
                             }
                         }
                     },
-                    Dir::Right => {
+                    PlayerDir::Right => {
                         if player.y % 50.0 == 0.0 {
-                            if can_go_to(player.x + 50.0 + STEP_MOVE - pog, player.y , game.level_num) {
-                                player.dir = Dir::Right;
+                            if can_go_to(player.x + 50.0 + PLAYER_STEP_MOVE - pog, player.y , game.level_num) {
+                                player.dir = PlayerDir::Right;
                             }
                         }
                     },
                 };
 
                 match player.dir {
-                    Dir::Up => {
-                        if can_go_to(player.x, player.y - STEP_MOVE, game.level_num) {
-                            player.y -= STEP_MOVE;
+                    PlayerDir::Up => {
+                        if can_go_to(player.x, player.y - PLAYER_STEP_MOVE, game.level_num) {
+                            player.y -= PLAYER_STEP_MOVE;
                         }
                     },
-                    Dir::Down => {
-                        if can_go_to(player.x, player.y + 50.0 + STEP_MOVE - pog, game.level_num) {
-                            player.y += STEP_MOVE;
+                    PlayerDir::Down => {
+                        if can_go_to(player.x, player.y + 50.0 + PLAYER_STEP_MOVE - pog, game.level_num) {
+                            player.y += PLAYER_STEP_MOVE;
                         }
                     },
-                    Dir::Left => {
-                        if can_go_to(player.x - STEP_MOVE, player.y, game.level_num) {
-                            player.x -= STEP_MOVE;
+                    PlayerDir::Left => {
+                        if can_go_to(player.x - PLAYER_STEP_MOVE, player.y, game.level_num) {
+                            player.x -= PLAYER_STEP_MOVE;
                         }
                     },
-                    Dir::Right => {
-                        if can_go_to(player.x + 50.0 + STEP_MOVE - pog, player.y , game.level_num) {
-                            player.x += STEP_MOVE;
+                    PlayerDir::Right => {
+                        if can_go_to(player.x + 50.0 + PLAYER_STEP_MOVE - pog, player.y , game.level_num) {
+                            player.x += PLAYER_STEP_MOVE;
                         }
                     },
                 }
@@ -248,6 +291,14 @@ async fn main() {
                 }
 
                 player.draw();
+                player.draw_lives(game.lives);
+
+                for enemy in &mut enemies {
+                    enemy.draw();
+                    if let Some(_i) = enemy.rect.intersect(player.rect) {
+                        game_state = GameState::LevelFailed;
+                    }
+                }
 
                 if small_coins.len() == 0 {
                     game_state = GameState::LevelCompleted;
@@ -265,6 +316,13 @@ async fn main() {
         match big_coins.iter().position(|x| x.destroyed == true) {
             Some(idx) => {
                 big_coins.remove(idx);
+            },
+            None => {},
+        };
+
+        match enemies.iter().position(|x| x.destroyed == true) {
+            Some(idx) => {
+                enemies.remove(idx);
             },
             None => {},
         };
