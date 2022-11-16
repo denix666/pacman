@@ -1,4 +1,4 @@
-use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
+use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}, rand::ChooseRandom};
 
 extern crate rand;
 use rand::{Rng};
@@ -26,6 +26,9 @@ use messages::*;
 
 mod enemy;
 use enemy::*;
+
+mod die_animation;
+use die_animation::*;
 
 pub enum GameState {
     Game,
@@ -59,14 +62,12 @@ fn can_go_to(y: f32, x: f32, level_num: i32) -> bool {
         }
     };
 
-
     if lvl[(x / 50.0) as usize][(y / 50.0) as usize] != 1 {
         return true
     } else {
         return false;
     }
 }
-
 
 #[macroquad::main(window_conf)]
 async fn main() {
@@ -78,6 +79,7 @@ async fn main() {
     let mut big_coins: Vec<Coin> = Vec::new();
     let mut enemies: Vec<Enemy> = Vec::new();
     let resources = Resources::new().await;
+    let mut animations: Vec<DieAnimation> = Vec::new();
 
     let pog = 1.0;
     
@@ -99,18 +101,29 @@ async fn main() {
 
             GameState::LevelFailed => {
                 map.draw();
-                player.status = Status::Died;
-                player.draw();
+                for coin in &mut small_coins {
+                    coin.draw();
+                }
+                for coin in &mut big_coins {
+                    coin.draw();
+                }
+                for en in &mut enemies {
+                    en.draw();
+                }
+                
                 player.draw_lives(game.lives);
                 draw_score(resources.font,&game.score.to_string());
-                
 
-                if is_key_pressed(KeyCode::Space) {
+                for animation in &mut animations {
+                    animation.draw();
+                }
+                
+                if animations.len() == 0 && is_key_pressed(KeyCode::Space) {
                     if game.lives > 0 {
                         game.lives -= 1;
                         player.x = 550.0;
                         player.y = 650.0;
-                        player.status = Status::Playing;
+                        player.dir = PlayerDir::Left;
                         game_state = GameState::Game;
                     } else {
                         // gameover
@@ -159,6 +172,8 @@ async fn main() {
                     while !item_placed_successfully {
                         let y = rand::thread_rng().gen_range(0..=10);
                         let x = rand::thread_rng().gen_range(0..=22);
+                        // let y = 2;
+                        // let x = 10;
                         
                         if lvl[y as usize][x as usize] == 0 {
                             let mut enemy_in_this_place_already_exist = false;
@@ -294,10 +309,101 @@ async fn main() {
                 player.draw_lives(game.lives);
 
                 for enemy in &mut enemies {
-                    enemy.draw();
-                    if let Some(_i) = enemy.rect.intersect(player.rect) {
-                        game_state = GameState::LevelFailed;
+                    enemy.possible_moves_list.clear();
+                    match enemy.dir {
+                        EnemyDir::Up => {
+                            if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) {
+                                enemy.y -= ENEMY_STEP_MOVE;
+                            }
+
+                            if enemy.y % 50.0 == 0.0 {
+                                if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Left
+                                    enemy.possible_moves_list.push("left".to_string());
+                                }
+                                if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Right
+                                    enemy.possible_moves_list.push("right".to_string());
+                                }
+                            }
+                        },
+                        EnemyDir::Down => {
+                            if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE - pog, game.level_num) {
+                                enemy.y += ENEMY_STEP_MOVE;
+                            }
+                            
+                            if enemy.y % 50.0 == 0.0 {
+                                if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Left
+                                    enemy.possible_moves_list.push("left".to_string());
+                                }
+                                if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Right
+                                    enemy.possible_moves_list.push("right".to_string());
+                                }
+                            }
+                        },
+                        EnemyDir::Left => {
+                            if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) {
+                                enemy.x -= ENEMY_STEP_MOVE;
+                            }
+
+                            if enemy.x % 50.0 == 0.0 {
+                                if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) { //Up
+                                    enemy.possible_moves_list.push("up".to_string());
+                                }
+                                if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE, game.level_num) { //Down
+                                    enemy.possible_moves_list.push("down".to_string());
+                                }
+                            }
+                        },
+                        EnemyDir::Right => {
+                            if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE - pog, enemy.y , game.level_num) {
+                                enemy.x += ENEMY_STEP_MOVE;
+                            }
+
+                            if enemy.x % 50.0 == 0.0 {
+                                if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) { //Up
+                                    enemy.possible_moves_list.push("up".to_string());
+                                }
+                                if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE, game.level_num) { //Down
+                                    enemy.possible_moves_list.push("down".to_string());
+                                }
+                            }
+                        },
                     }
+
+                    // debig
+                    //println!("{:?}", enemy.possible_moves_list);
+                    //println!("{:?}", enemy.possible_moves_list.choose());
+
+                    
+                    if enemy.possible_moves_list.len() > 0 {
+                        match enemy.possible_moves_list.choose().unwrap().as_str() {
+                            "up" => {
+                                enemy.dir = EnemyDir::Up;
+                            },
+                            "down" => {
+                                enemy.dir = EnemyDir::Down;
+                            },
+                            "left" => {
+                                enemy.dir = EnemyDir::Left;
+                            },
+                            "right" => {
+                                enemy.dir = EnemyDir::Right;
+                            },
+                            _ => {
+                                panic!("unknown dir");
+                            }
+                        };
+                    }
+                    
+                    
+                    if let Some(_i) = enemy.rect.intersect(player.rect) {
+                        animations.push(
+                            DieAnimation::new(player.x, player.y).await,
+                        );
+                        game_state = GameState::LevelFailed;
+                        enemy.destroyed = true;
+                    }
+
+                    enemy.draw();
                 }
 
                 if small_coins.len() == 0 {
@@ -323,6 +429,13 @@ async fn main() {
         match enemies.iter().position(|x| x.destroyed == true) {
             Some(idx) => {
                 enemies.remove(idx);
+            },
+            None => {},
+        };
+
+        match animations.iter().position(|x| x.destroyed == true) {
+            Some(idx) => {
+                animations.remove(idx);
             },
             None => {},
         };

@@ -12,11 +12,6 @@ pub enum PlayerDir {
     Right,
 }
 
-pub enum Status {
-    Playing,
-    Died,
-}
-
 pub struct Player {
     pub x: f32,
     pub y: f32, 
@@ -29,7 +24,7 @@ pub struct Player {
     update_interval: i32,
     cur_frame: usize,
     pub rect: Rect,
-    pub status: Status,
+    //pub destroyed: bool,
 }
 
 impl Player {
@@ -70,7 +65,7 @@ impl Player {
             update_interval: 0,
             cur_frame: 0,
             rect: Rect::new(0.0, 0.0, 50.0,50.0),
-            status: Status::Playing,
+            //destroyed: false,
         }
     }
 
@@ -83,39 +78,32 @@ impl Player {
     }
 
     pub fn draw(&mut self) {
-        match self.status {
-            Status::Playing => {
-                self.update_interval += 1;
-                if self.update_interval > ANIMATION_SPEED {
-                    self.update_interval = 0;
-                    self.cur_frame += 1;
-                    if self.cur_frame == self.up_textures.len() {
-                        self.cur_frame = 0;
-                    }
-                }
+        self.update_interval += 1;
+        if self.update_interval > ANIMATION_SPEED {
+            self.update_interval = 0;
+            self.cur_frame += 1;
+            if self.cur_frame == self.up_textures.len() {
+                self.cur_frame = 0;
+            }
+        }
 
-                match self.dir {
-                    PlayerDir::Up => {
-                        draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
-                    },
-                    PlayerDir::Down => {
-                        draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
-                    },
-                    PlayerDir::Left => {
-                        draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
-                    },
-                    PlayerDir::Right => {
-                        draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
-                    },
-                }
-
-                // define rect
-                self.rect.x = self.x;
-                self.rect.y = self.y;
+        match self.dir {
+            PlayerDir::Up => {
+                draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
             },
-            Status::Died => {
-                 
+            PlayerDir::Down => {
+                draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+            },
+            PlayerDir::Left => {
+                draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+            },
+            PlayerDir::Right => {
+                draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
             },
         }
+
+        // define rect
+        self.rect.x = self.x;
+        self.rect.y = self.y;
     }
 }

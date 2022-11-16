@@ -3,9 +3,9 @@ extern crate rand;
 use rand::{Rng};
 
 const ANIMATION_SPEED: i32 = 8;
-//pub const ENEMY_STEP_MOVE: f32 = 5.0;
+pub const ENEMY_STEP_MOVE: f32 = 5.0;
 
-pub enum Dir {
+pub enum EnemyDir {
     Up,
     Down,
     Left,
@@ -23,7 +23,8 @@ pub struct Enemy {
     right_textures: Vec<Texture2D>,
     update_interval: i32,
     cur_frame: usize,
-    pub dir: Dir,
+    pub dir: EnemyDir,
+    pub possible_moves_list: Vec<String>,
 }
 
 impl Enemy {
@@ -60,11 +61,11 @@ impl Enemy {
             right_sprites.push(load_texture(&path).await.unwrap());
         }
 
-        let dir: Dir = match rand::thread_rng().gen_range(0..=3) { 
-            0 => Dir::Down,
-            1 => Dir::Left,
-            2 => Dir::Right,
-            _ => Dir::Up,
+        let dir: EnemyDir = match rand::thread_rng().gen_range(0..=3) { 
+            0 => EnemyDir::Down,
+            1 => EnemyDir::Left,
+            2 => EnemyDir::Right,
+            _ => EnemyDir::Up,
         };
         
         Self {
@@ -79,6 +80,7 @@ impl Enemy {
             update_interval: 0,
             cur_frame: 0,
             dir,
+            possible_moves_list: vec![],
         }
     }
 
@@ -93,16 +95,16 @@ impl Enemy {
         }
 
         match self.dir {
-            Dir::Up => {
+            EnemyDir::Up => {
                 draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
             },
-            Dir::Down => {
+            EnemyDir::Down => {
                 draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
             },
-            Dir::Left => {
+            EnemyDir::Left => {
                 draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
             },
-            Dir::Right => {
+            EnemyDir::Right => {
                 draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
             },
         }
