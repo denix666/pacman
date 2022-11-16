@@ -24,7 +24,6 @@ pub struct Player {
     update_interval: i32,
     cur_frame: usize,
     pub rect: Rect,
-    //pub destroyed: bool,
 }
 
 impl Player {
@@ -65,7 +64,6 @@ impl Player {
             update_interval: 0,
             cur_frame: 0,
             rect: Rect::new(0.0, 0.0, 50.0,50.0),
-            //destroyed: false,
         }
     }
 

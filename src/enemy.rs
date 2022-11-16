@@ -21,10 +21,15 @@ pub struct Enemy {
     up_textures: Vec<Texture2D>,
     left_textures: Vec<Texture2D>,
     right_textures: Vec<Texture2D>,
+    scared_down_textures: Vec<Texture2D>,
+    scared_up_textures: Vec<Texture2D>,
+    scared_left_textures: Vec<Texture2D>,
+    scared_right_textures: Vec<Texture2D>,
     update_interval: i32,
     cur_frame: usize,
     pub dir: EnemyDir,
     pub possible_moves_list: Vec<String>,
+    pub scared_mode: bool,
 }
 
 impl Enemy {
@@ -61,6 +66,31 @@ impl Enemy {
             right_sprites.push(load_texture(&path).await.unwrap());
         }
 
+        let mut scared_down_sprites:Vec<Texture2D> = Vec::new();
+        let mut scared_up_sprites:Vec<Texture2D> = Vec::new();
+        let mut scared_left_sprites:Vec<Texture2D> = Vec::new();
+        let mut scared_right_sprites:Vec<Texture2D> = Vec::new();
+
+        for i in 0..=1 {
+            let path = format!("assets/images/enemy/scared_down_{}.png", i);
+            scared_down_sprites.push(load_texture(&path).await.unwrap());
+        }
+
+        for i in 0..=1 {
+            let path = format!("assets/images/enemy/scared_up_{}.png", i);
+            scared_up_sprites.push(load_texture(&path).await.unwrap());
+        }
+
+        for i in 0..=1 {
+            let path = format!("assets/images/enemy/scared_left_{}.png", i);
+            scared_left_sprites.push(load_texture(&path).await.unwrap());
+        }
+
+        for i in 0..=1 {
+            let path = format!("assets/images/enemy/scared_right_{}.png", i);
+            scared_right_sprites.push(load_texture(&path).await.unwrap());
+        }
+
         let dir: EnemyDir = match rand::thread_rng().gen_range(0..=3) { 
             0 => EnemyDir::Down,
             1 => EnemyDir::Left,
@@ -76,11 +106,16 @@ impl Enemy {
             up_textures: up_sprites,
             left_textures: left_sprites,
             right_textures: right_sprites,
+            scared_down_textures: scared_down_sprites,
+            scared_up_textures: scared_up_sprites,
+            scared_left_textures: scared_left_sprites,
+            scared_right_textures: scared_right_sprites,
             rect: Rect::new(0.0, 0.0, 0.0, 0.0),
             update_interval: 0,
             cur_frame: 0,
             dir,
             possible_moves_list: vec![],
+            scared_mode: false,
         }
     }
 
@@ -96,16 +131,32 @@ impl Enemy {
 
         match self.dir {
             EnemyDir::Up => {
-                draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                if !self.scared_mode {
+                    draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                } else {
+                    draw_texture(self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
+                }
             },
             EnemyDir::Down => {
-                draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                if !self.scared_mode {
+                    draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                } else {
+                    draw_texture(self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
+                }
             },
             EnemyDir::Left => {
-                draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                if !self.scared_mode {
+                    draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                } else {
+                    draw_texture(self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
+                }
             },
             EnemyDir::Right => {
-                draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                if !self.scared_mode {
+                    draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                } else {
+                    draw_texture(self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
+                }
             },
         }
 

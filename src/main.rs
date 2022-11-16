@@ -1,7 +1,8 @@
-use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}, rand::ChooseRandom};
+use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
 
 extern crate rand;
 use rand::{Rng};
+use rand::seq::SliceRandom;
 
 mod settings;
 use settings::*;
@@ -57,6 +58,9 @@ fn can_go_to(y: f32, x: f32, level_num: i32) -> bool {
         1  => LVL1,
         2  => LVL2,
         3  => LVL3,
+        4  => LVL1,
+        5  => LVL2,
+        6  => LVL3,
         _ => {
             panic!("no such level");
         }
@@ -135,12 +139,16 @@ async fn main() {
                 map.lvl_num = game.level_num;
                 big_coins.clear();
                 small_coins.clear();
+                game.scared_mode = false;
                 
                 // load coins
                 let lvl = match game.level_num {
                     1  => LVL1,
                     2  => LVL2,
                     3  => LVL3,
+                    4  => LVL1,
+                    5  => LVL2,
+                    6  => LVL3,
                     _ => {
                         panic!("no such level");
                     }
@@ -172,8 +180,6 @@ async fn main() {
                     while !item_placed_successfully {
                         let y = rand::thread_rng().gen_range(0..=10);
                         let x = rand::thread_rng().gen_range(0..=22);
-                        // let y = 2;
-                        // let x = 10;
                         
                         if lvl[y as usize][x as usize] == 0 {
                             let mut enemy_in_this_place_already_exist = false;
@@ -201,6 +207,9 @@ async fn main() {
                 show_level_completed_text(resources.font);
                 if is_key_pressed(KeyCode::Space) {
                     game.level_num += 1;
+                    player.x = 550.0;
+                    player.y = 650.0;
+                    player.dir = PlayerDir::Left;
                     game_state = GameState::InitLevel;
                 }
             }
@@ -297,6 +306,8 @@ async fn main() {
 
                     if let Some(_i) = coin.rect.intersect(player.rect) {
                         coin.destroyed = true;
+                        game.scared_mode = true;
+                        game.scared_mode_started_at = get_time();
                         game.score += 50;
                         play_sound(resources.bonus, PlaySoundParams {
                             looped: false,
@@ -310,6 +321,7 @@ async fn main() {
 
                 for enemy in &mut enemies {
                     enemy.possible_moves_list.clear();
+                    enemy.scared_mode = game.scared_mode;
                     match enemy.dir {
                         EnemyDir::Up => {
                             if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) {
@@ -369,13 +381,45 @@ async fn main() {
                         },
                     }
 
-                    // debig
-                    //println!("{:?}", enemy.possible_moves_list);
-                    //println!("{:?}", enemy.possible_moves_list.choose());
-
-                    
                     if enemy.possible_moves_list.len() > 0 {
-                        match enemy.possible_moves_list.choose().unwrap().as_str() {
+                        let d = "up".to_string();
+                        if enemy.possible_moves_list.contains(&d) {
+                            if enemy.y >= player.y {
+                                for _ in 0..7 {
+                                    enemy.possible_moves_list.push("up".to_string());
+                                }
+                            }
+                        }
+
+                        let d = "down".to_string();
+                        if enemy.possible_moves_list.contains(&d) {
+                            if enemy.y <= player.y {
+                                for _ in 0..7 {
+                                    enemy.possible_moves_list.push("down".to_string());
+                                }
+                            }
+                        }
+
+                        let d = "right".to_string();
+                        if enemy.possible_moves_list.contains(&d) {
+                            if enemy.x <= player.x {
+                                for _ in 0..7 {
+                                    enemy.possible_moves_list.push("right".to_string());
+                                }
+                            }
+                        }
+
+                        let d = "left".to_string();
+                        if enemy.possible_moves_list.contains(&d) {
+                            if enemy.x >= player.x {
+                                for _ in 0..7 {
+                                    enemy.possible_moves_list.push("left".to_string());
+                                }
+                            }
+                        }
+
+
+                        match enemy.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
                             "up" => {
                                 enemy.dir = EnemyDir::Up;
                             },
@@ -396,14 +440,36 @@ async fn main() {
                     
                     
                     if let Some(_i) = enemy.rect.intersect(player.rect) {
-                        animations.push(
-                            DieAnimation::new(player.x, player.y).await,
-                        );
-                        game_state = GameState::LevelFailed;
+                        if !game.scared_mode {
+                            animations.push(
+                                DieAnimation::new(player.x, player.y).await,
+                            );
+                            game_state = GameState::LevelFailed;
+                        } else {
+                            play_sound(resources.eat_ghost, PlaySoundParams {
+                                looped: false,
+                                volume: 0.2,
+                            });
+                            game.score += 150;
+                        }
                         enemy.destroyed = true;
                     }
 
                     enemy.draw();
+                }
+
+                if get_time() - game.scared_mode_started_at > 4.0 {
+                    if !game.siren_played && game.scared_mode {
+                        play_sound(resources.siren, PlaySoundParams {
+                            looped: false,
+                            volume: 0.4,
+                        });
+                        game.siren_played = true;
+                    }
+                }
+                if get_time() - game.scared_mode_started_at > 6.0 {
+                    game.scared_mode = false;
+                    game.siren_played = false;
                 }
 
                 if small_coins.len() == 0 {

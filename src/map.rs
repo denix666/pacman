@@ -79,6 +79,9 @@ impl Map {
             1  => LVL1,
             2  => LVL2,
             3  => LVL3,
+            4  => LVL1,
+            5  => LVL2,
+            6  => LVL3,
             _ => {
                 panic!("no such level");
             }
@@ -91,6 +94,9 @@ impl Map {
             1 => BLUE,
             2 => SKYBLUE,
             3 => LIGHTGRAY,
+            4 => LIME,
+            5 => RED,
+            6 => BROWN,
             _ => {
                 panic!("no such level");
             }
