@@ -139,6 +139,7 @@ async fn main() {
                 map.lvl_num = game.level_num;
                 big_coins.clear();
                 small_coins.clear();
+                enemies.clear();
                 game.scared_mode = false;
                 
                 // load coins
@@ -306,6 +307,9 @@ async fn main() {
 
                     if let Some(_i) = coin.rect.intersect(player.rect) {
                         coin.destroyed = true;
+                        for enemy in &mut enemies {
+                            enemy.enemy_mode = EnemyMode::Scared;
+                        }
                         game.scared_mode = true;
                         game.scared_mode_started_at = get_time();
                         game.score += 50;
@@ -321,60 +325,60 @@ async fn main() {
 
                 for enemy in &mut enemies {
                     enemy.possible_moves_list.clear();
-                    enemy.scared_mode = game.scared_mode;
+                    
                     match enemy.dir {
                         EnemyDir::Up => {
-                            if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) {
-                                enemy.y -= ENEMY_STEP_MOVE;
+                            if can_go_to(enemy.x, enemy.y - enemy.speed, game.level_num) {
+                                enemy.y -= enemy.speed;
                             }
 
                             if enemy.y % 50.0 == 0.0 {
-                                if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Left
+                                if can_go_to(enemy.x - enemy.speed, enemy.y, game.level_num) { //Left
                                     enemy.possible_moves_list.push("left".to_string());
                                 }
-                                if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Right
+                                if can_go_to(enemy.x + 50.0 + enemy.speed, enemy.y, game.level_num) { //Right
                                     enemy.possible_moves_list.push("right".to_string());
                                 }
                             }
                         },
                         EnemyDir::Down => {
-                            if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE - pog, game.level_num) {
-                                enemy.y += ENEMY_STEP_MOVE;
+                            if can_go_to(enemy.x, enemy.y + 50.0 + enemy.speed - pog, game.level_num) {
+                                enemy.y += enemy.speed;
                             }
                             
                             if enemy.y % 50.0 == 0.0 {
-                                if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Left
+                                if can_go_to(enemy.x - enemy.speed, enemy.y, game.level_num) { //Left
                                     enemy.possible_moves_list.push("left".to_string());
                                 }
-                                if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE, enemy.y, game.level_num) { //Right
+                                if can_go_to(enemy.x + 50.0 + enemy.speed, enemy.y, game.level_num) { //Right
                                     enemy.possible_moves_list.push("right".to_string());
                                 }
                             }
                         },
                         EnemyDir::Left => {
-                            if can_go_to(enemy.x - ENEMY_STEP_MOVE, enemy.y, game.level_num) {
-                                enemy.x -= ENEMY_STEP_MOVE;
+                            if can_go_to(enemy.x - enemy.speed, enemy.y, game.level_num) {
+                                enemy.x -= enemy.speed;
                             }
 
                             if enemy.x % 50.0 == 0.0 {
-                                if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) { //Up
+                                if can_go_to(enemy.x, enemy.y - enemy.speed, game.level_num) { //Up
                                     enemy.possible_moves_list.push("up".to_string());
                                 }
-                                if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE, game.level_num) { //Down
+                                if can_go_to(enemy.x, enemy.y + 50.0 + enemy.speed, game.level_num) { //Down
                                     enemy.possible_moves_list.push("down".to_string());
                                 }
                             }
                         },
                         EnemyDir::Right => {
-                            if can_go_to(enemy.x + 50.0 + ENEMY_STEP_MOVE - pog, enemy.y , game.level_num) {
-                                enemy.x += ENEMY_STEP_MOVE;
+                            if can_go_to(enemy.x + 50.0 + enemy.speed - pog, enemy.y , game.level_num) {
+                                enemy.x += enemy.speed;
                             }
 
                             if enemy.x % 50.0 == 0.0 {
-                                if can_go_to(enemy.x, enemy.y - ENEMY_STEP_MOVE, game.level_num) { //Up
+                                if can_go_to(enemy.x, enemy.y - enemy.speed, game.level_num) { //Up
                                     enemy.possible_moves_list.push("up".to_string());
                                 }
-                                if can_go_to(enemy.x, enemy.y + 50.0 + ENEMY_STEP_MOVE, game.level_num) { //Down
+                                if can_go_to(enemy.x, enemy.y + 50.0 + enemy.speed, game.level_num) { //Down
                                     enemy.possible_moves_list.push("down".to_string());
                                 }
                             }
@@ -382,41 +386,41 @@ async fn main() {
                     }
 
                     if enemy.possible_moves_list.len() > 0 {
-                        let d = "up".to_string();
-                        if enemy.possible_moves_list.contains(&d) {
-                            if enemy.y >= player.y {
-                                for _ in 0..7 {
-                                    enemy.possible_moves_list.push("up".to_string());
-                                }
-                            }
-                        }
+                        // let d = "up".to_string();
+                        // if enemy.possible_moves_list.contains(&d) {
+                        //     if enemy.y >= player.y {
+                        //         for _ in 0..7 {
+                        //             enemy.possible_moves_list.push("up".to_string());
+                        //         }
+                        //     }
+                        // }
 
-                        let d = "down".to_string();
-                        if enemy.possible_moves_list.contains(&d) {
-                            if enemy.y <= player.y {
-                                for _ in 0..7 {
-                                    enemy.possible_moves_list.push("down".to_string());
-                                }
-                            }
-                        }
+                        // let d = "down".to_string();
+                        // if enemy.possible_moves_list.contains(&d) {
+                        //     if enemy.y <= player.y {
+                        //         for _ in 0..7 {
+                        //             enemy.possible_moves_list.push("down".to_string());
+                        //         }
+                        //     }
+                        // }
 
-                        let d = "right".to_string();
-                        if enemy.possible_moves_list.contains(&d) {
-                            if enemy.x <= player.x {
-                                for _ in 0..7 {
-                                    enemy.possible_moves_list.push("right".to_string());
-                                }
-                            }
-                        }
+                        // let d = "right".to_string();
+                        // if enemy.possible_moves_list.contains(&d) {
+                        //     if enemy.x <= player.x {
+                        //         for _ in 0..7 {
+                        //             enemy.possible_moves_list.push("right".to_string());
+                        //         }
+                        //     }
+                        // }
 
-                        let d = "left".to_string();
-                        if enemy.possible_moves_list.contains(&d) {
-                            if enemy.x >= player.x {
-                                for _ in 0..7 {
-                                    enemy.possible_moves_list.push("left".to_string());
-                                }
-                            }
-                        }
+                        // let d = "left".to_string();
+                        // if enemy.possible_moves_list.contains(&d) {
+                        //     if enemy.x >= player.x {
+                        //         for _ in 0..7 {
+                        //             enemy.possible_moves_list.push("left".to_string());
+                        //         }
+                        //     }
+                        // }
 
 
                         match enemy.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
@@ -436,23 +440,30 @@ async fn main() {
                                 panic!("unknown dir");
                             }
                         };
+                    } else {
+                        println!("fff");
                     }
                     
                     
                     if let Some(_i) = enemy.rect.intersect(player.rect) {
-                        if !game.scared_mode {
-                            animations.push(
-                                DieAnimation::new(player.x, player.y).await,
-                            );
-                            game_state = GameState::LevelFailed;
-                        } else {
-                            play_sound(resources.eat_ghost, PlaySoundParams {
-                                looped: false,
-                                volume: 0.2,
-                            });
-                            game.score += 150;
-                        }
-                        enemy.destroyed = true;
+                        match enemy.enemy_mode {
+                            EnemyMode::Normal => {
+                                animations.push(
+                                    DieAnimation::new(player.x, player.y).await,
+                                );
+                                game_state = GameState::LevelFailed;
+                            },
+                            EnemyMode::Scared => {
+                                play_sound(resources.eat_ghost, PlaySoundParams {
+                                    looped: false,
+                                    volume: 0.2,
+                                });
+                                game.score += 150;
+                                enemy.enemy_mode = EnemyMode::Eyes;
+                                enemy.speed = 10.0;
+                            },
+                            EnemyMode::Eyes => {},
+                        };
                     }
 
                     enemy.draw();
@@ -469,6 +480,10 @@ async fn main() {
                 }
                 if get_time() - game.scared_mode_started_at > 6.0 {
                     game.scared_mode = false;
+                    for enemy in &mut enemies {
+                        enemy.enemy_mode = EnemyMode::Normal;
+                        enemy.speed = 5.0;
+                    }
                     game.siren_played = false;
                 }
 

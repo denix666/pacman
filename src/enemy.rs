@@ -12,6 +12,13 @@ pub enum EnemyDir {
     Right,
 }
 
+#[derive(PartialEq)]
+pub enum EnemyMode {
+    Normal,
+    Scared,
+    Eyes,
+}
+
 pub struct Enemy {
     pub x: f32,
     pub y: f32, 
@@ -25,11 +32,16 @@ pub struct Enemy {
     scared_up_textures: Vec<Texture2D>,
     scared_left_textures: Vec<Texture2D>,
     scared_right_textures: Vec<Texture2D>,
+    eyes_down_texture: Texture2D,
+    eyes_up_texture: Texture2D,
+    eyes_left_texture: Texture2D,
+    eyes_right_texture: Texture2D,
     update_interval: i32,
     cur_frame: usize,
+    pub speed: f32,
     pub dir: EnemyDir,
     pub possible_moves_list: Vec<String>,
-    pub scared_mode: bool,
+    pub enemy_mode: EnemyMode,
 }
 
 impl Enemy {
@@ -110,12 +122,17 @@ impl Enemy {
             scared_up_textures: scared_up_sprites,
             scared_left_textures: scared_left_sprites,
             scared_right_textures: scared_right_sprites,
+            eyes_down_texture: load_texture("assets/images/eyes/down.png").await.unwrap(),
+            eyes_up_texture: load_texture("assets/images/eyes/up.png").await.unwrap(),
+            eyes_left_texture: load_texture("assets/images/eyes/left.png").await.unwrap(),
+            eyes_right_texture: load_texture("assets/images/eyes/right.png").await.unwrap(),
             rect: Rect::new(0.0, 0.0, 0.0, 0.0),
             update_interval: 0,
             cur_frame: 0,
             dir,
             possible_moves_list: vec![],
-            scared_mode: false,
+            enemy_mode: EnemyMode::Normal,
+            speed: ENEMY_STEP_MOVE,
         }
     }
 
@@ -131,32 +148,56 @@ impl Enemy {
 
         match self.dir {
             EnemyDir::Up => {
-                if !self.scared_mode {
-                    draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
+                match self.enemy_mode {
+                    EnemyMode::Normal => {
+                        draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Scared => {
+                        draw_texture(self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Eyes => {
+                        draw_texture(self.eyes_up_texture, self.x, self.y, WHITE);
+                    },
+                };
             },
             EnemyDir::Down => {
-                if !self.scared_mode {
-                    draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
+                match self.enemy_mode {
+                    EnemyMode::Normal => {
+                        draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Scared => {
+                        draw_texture(self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Eyes => {
+                        draw_texture(self.eyes_down_texture, self.x, self.y, WHITE);
+                    },
+                };
             },
             EnemyDir::Left => {
-                if !self.scared_mode {
-                    draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
+                match self.enemy_mode {
+                    EnemyMode::Normal => {
+                        draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Scared => {
+                        draw_texture(self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Eyes => {
+                        draw_texture(self.eyes_left_texture, self.x, self.y, WHITE);
+                    },
+                };
             },
             EnemyDir::Right => {
-                if !self.scared_mode {
-                    draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
+                match self.enemy_mode {
+                    EnemyMode::Normal => {
+                        draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Scared => {
+                        draw_texture(self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
+                    },
+                    EnemyMode::Eyes => {
+                        draw_texture(self.eyes_right_texture, self.x, self.y, WHITE);
+                    },
+                };
             },
         }
 
