@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 pub struct Game {
     pub score: i32,
     pub lives: i32,
+    pub map_color: Color,
     pub level_num: i32,
     pub scared_mode: bool,
     pub scared_mode_started_at: f64,
@@ -15,6 +16,7 @@ impl Game {
             score: 0,
             lives: 0,
             level_num: 1,
+            map_color: BLUE,
             scared_mode: false,
             scared_mode_started_at: 0.0,
             siren_played: false,

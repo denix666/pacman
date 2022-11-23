@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::settings::RES_WIDTH;
+use crate::{RES_WIDTH};
 
 const ANIMATION_SPEED: i32 = 8;
 pub const PLAYER_STEP_MOVE: f32 = 5.0;
@@ -75,6 +75,106 @@ impl Player {
         }
     }
 
+    pub fn update(&mut self, points: &Vec<crate::points::Point>) {
+        if is_key_down(KeyCode::Left) {
+            self.requested_dir = PlayerDir::Left;
+        }
+
+        if is_key_down(KeyCode::Right) {
+            self.requested_dir = PlayerDir::Right;
+        }
+
+        if is_key_down(KeyCode::Up) {
+            self.requested_dir = PlayerDir::Up;
+        }
+
+        if is_key_down(KeyCode::Down) {
+            self.requested_dir = PlayerDir::Down;
+        }
+
+        match self.requested_dir {
+            PlayerDir::Up => {
+                if self.x % 50.0 == 0.0 {
+                    let check_x: u32 = (self.x / 50.0) as u32;
+                    let check_y: u32 = ((self.y - PLAYER_STEP_MOVE)/ 50.0) as u32;
+
+                    if crate::get_val(check_x, check_y, &points) != "X" {
+                        self.dir = PlayerDir::Up;
+                    }
+                }
+            },
+            PlayerDir::Down => {
+                if self.x % 50.0 == 0.0 {
+                    let check_x: u32 = (self.x / 50.0) as u32;
+                    let check_y: u32 = (self.y / 50.0) as u32;
+
+                    if crate::get_val(check_x, check_y + 1, &points) != "X" {
+                        self.dir = PlayerDir::Down;
+                    }
+                }
+            },
+            PlayerDir::Left => {
+                if self.y % 50.0 == 0.0 {
+                    let check_x: u32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as u32;
+                    let check_y: u32 = (self.y / 50.0) as u32;
+
+                    if crate::get_val(check_x, check_y, &points) != "X" {
+                        self.dir = PlayerDir::Left;
+                    }
+                }
+            },
+            PlayerDir::Right => {
+                if self.y % 50.0 == 0.0 {
+                    let check_x: u32 = (self.x / 50.0) as u32;
+                    let check_y: u32 = (self.y / 50.0) as u32;
+
+                    if crate::get_val(check_x + 1, check_y, &points) != "X" {
+                        self.dir = PlayerDir::Right;
+                    }
+                }
+            },
+        };
+
+        match self.dir {
+            PlayerDir::Up => {
+                let check_x: u32 = (self.x / 50.0) as u32;
+                let check_y: u32 = ((self.y  - PLAYER_STEP_MOVE )/ 50.0) as u32;
+
+                if crate::get_val(check_x, check_y, &points) != "X" {
+                    self.y -= PLAYER_STEP_MOVE;
+                }
+            },
+            PlayerDir::Down => {
+                let check_x: u32 = (self.x / 50.0) as u32;
+                let check_y: u32 = (self.y / 50.0) as u32;
+
+                if crate::get_val( check_x, check_y + 1, &points) != "X" {
+                    self.y += PLAYER_STEP_MOVE;
+                }
+            },
+            PlayerDir::Left => {
+                let check_x: u32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as u32;
+                let check_y: u32 = (self.y / 50.0) as u32;
+
+                if crate::get_val( check_x, check_y, &points) != "X" {
+                    self.x -= PLAYER_STEP_MOVE;
+                }
+            },
+            PlayerDir::Right => {
+                let check_x: u32 = (self.x / 50.0) as u32;
+                let check_y: u32 = (self.y / 50.0) as u32;
+
+                if crate::get_val( check_x + 1, check_y, &points) != "X" {
+                    self.x += PLAYER_STEP_MOVE;
+                }
+            },
+        }
+
+        // define rect
+        self.rect.x = self.x;
+        self.rect.y = self.y;
+    }
+
     pub fn draw(&mut self) {
         self.update_interval += 1;
         if self.update_interval > ANIMATION_SPEED {
@@ -99,9 +199,5 @@ impl Player {
                 draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
             },
         }
-
-        // define rect
-        self.rect.x = self.x;
-        self.rect.y = self.y;
     }
 }

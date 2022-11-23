@@ -31,6 +31,46 @@ pub fn show_level_completed_text(font: Font) {
     );
 }
 
+pub fn show_game_completed_text(font: Font) {
+    draw_text_ex("GAME COMPLETED!!!", 300.0, 350.0, 
+        TextParams {
+            font,
+            font_size: 40,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+    
+    draw_text_ex("Press 'SPACE' to continue", 220.0, 450.0, 
+        TextParams {
+            font,
+            font_size: 40,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+}
+
+pub fn show_game_over_text(font: Font) {
+    draw_text_ex("GAME OVER!!!", 300.0, 350.0, 
+        TextParams {
+            font,
+            font_size: 40,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+    
+    draw_text_ex("Press 'SPACE' to continue", 220.0, 450.0, 
+        TextParams {
+            font,
+            font_size: 40,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+}
+
 pub fn draw_score(font: Font, score: &str) {
     draw_text_ex("SCORE: ", 7.0, 40.0, 
         TextParams {
