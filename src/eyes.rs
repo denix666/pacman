@@ -41,87 +41,90 @@ impl Eyes {
     pub fn update(&mut self, points: &Vec<crate::points::Point>) {
         self.possible_moves_list.clear();
 
+        
+
         match self.dir {
             Dir::Up => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = ((self.y - 5.0) / 50.0) as u32;
-                if crate::get_val(check_x, check_y, &points) != "X" {
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y, &points) != "#" {
                     self.y -= STEP_MOVE;
                 }
                 
                 if self.y % 50.0 == 0.0 {
-                    let check_x: u32 = ((self.x - 5.0) / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
                         self.possible_moves_list.push("left".to_string());
                     }
+                    
 
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x + 1, check_y, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
                         self.possible_moves_list.push("right".to_string());
                     }
                 }
             },
             Dir::Down => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
-                if crate::get_val(check_x, check_y + 1, &points) != "X" {
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
                     self.y += STEP_MOVE;
                 }
                 
                 if self.y % 50.0 == 0.0 {
-                    let check_x: u32 = ((self.x - 5.0) / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
                         self.possible_moves_list.push("left".to_string());
                     }
 
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x + 1, check_y, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
                         self.possible_moves_list.push("right".to_string());
                     }
                 }
             },
             Dir::Left => {
-                let check_x: u32 = ((self.x - 5.0) / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
-                if crate::get_val(check_x, check_y, &points) != "X" {
+                let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y, &points) != "#" {
                     self.x -= STEP_MOVE;
                 }
                 
                 if self.x % 50.0 == 0.0 {
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = ((self.y - 5.0) / 50.0) as u32;
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
                         self.possible_moves_list.push("up".to_string());
                     }
 
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x, check_y + 1, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
                         self.possible_moves_list.push("down".to_string());
                     }
                 }
             },
             Dir::Right => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
-                if crate::get_val(check_x + 1, check_y, &points) != "X" {
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
                     self.x += STEP_MOVE;
                 }
                 
                 if self.x % 50.0 == 0.0 {
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = ((self.y - 5.0) / 50.0) as u32;
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
                         self.possible_moves_list.push("up".to_string());
                     }
 
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
-                    if crate::get_val(check_x, check_y + 1, &points) != "X" {
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
                         self.possible_moves_list.push("down".to_string());
                     }
                 }

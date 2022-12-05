@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::{RES_WIDTH};
+use crate::resources::RES_WIDTH;
 
 const ANIMATION_SPEED: i32 = 8;
 pub const PLAYER_STEP_MOVE: f32 = 5.0;
@@ -95,40 +95,43 @@ impl Player {
         match self.requested_dir {
             PlayerDir::Up => {
                 if self.x % 50.0 == 0.0 {
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = ((self.y - PLAYER_STEP_MOVE)/ 50.0) as u32;
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = ((self.y - PLAYER_STEP_MOVE)/ 50.0) as i32;
 
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
                         self.dir = PlayerDir::Up;
                     }
                 }
             },
             PlayerDir::Down => {
                 if self.x % 50.0 == 0.0 {
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
 
-                    if crate::get_val(check_x, check_y + 1, &points) != "X" {
+                    if crate::levels::get_val(check_x, check_y + 1, &points) != "#" && 
+                        crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
                         self.dir = PlayerDir::Down;
                     }
                 }
             },
             PlayerDir::Left => {
                 if self.y % 50.0 == 0.0 {
-                    let check_x: u32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
+                    let check_x: i32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
 
-                    if crate::get_val(check_x, check_y, &points) != "X" {
+                    if crate::levels::get_val(check_x, check_y, &points) != "#" &&
+                        crate::levels::get_val(check_x, check_y, &points) != "-" {
                         self.dir = PlayerDir::Left;
                     }
                 }
             },
             PlayerDir::Right => {
                 if self.y % 50.0 == 0.0 {
-                    let check_x: u32 = (self.x / 50.0) as u32;
-                    let check_y: u32 = (self.y / 50.0) as u32;
+                    let check_x: i32 = (self.x / 50.0) as i32;
+                    let check_y: i32 = (self.y / 50.0) as i32;
 
-                    if crate::get_val(check_x + 1, check_y, &points) != "X" {
+                    if crate::levels::get_val(check_x + 1, check_y, &points) != "#" &&
+                        crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
                         self.dir = PlayerDir::Right;
                     }
                 }
@@ -137,34 +140,38 @@ impl Player {
 
         match self.dir {
             PlayerDir::Up => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = ((self.y  - PLAYER_STEP_MOVE )/ 50.0) as u32;
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = ((self.y  - PLAYER_STEP_MOVE )/ 50.0) as i32;
 
-                if crate::get_val(check_x, check_y, &points) != "X" {
+                if crate::levels::get_val(check_x, check_y, &points) != "#" &&
+                    crate::levels::get_val(check_x, check_y, &points) != "-" {
                     self.y -= PLAYER_STEP_MOVE;
                 }
             },
             PlayerDir::Down => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
 
-                if crate::get_val( check_x, check_y + 1, &points) != "X" {
+                if crate::levels::get_val( check_x, check_y + 1, &points) != "#" &&
+                    crate::levels::get_val( check_x, check_y + 1, &points) != "-" {
                     self.y += PLAYER_STEP_MOVE;
                 }
             },
             PlayerDir::Left => {
-                let check_x: u32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
+                let check_x: i32 = ((self.x - PLAYER_STEP_MOVE) / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
 
-                if crate::get_val( check_x, check_y, &points) != "X" {
+                if crate::levels::get_val( check_x, check_y, &points) != "#" &&
+                    crate::levels::get_val( check_x, check_y, &points) != "-" {
                     self.x -= PLAYER_STEP_MOVE;
                 }
             },
             PlayerDir::Right => {
-                let check_x: u32 = (self.x / 50.0) as u32;
-                let check_y: u32 = (self.y / 50.0) as u32;
+                let check_x: i32 = (self.x / 50.0) as i32;
+                let check_y: i32 = (self.y / 50.0) as i32;
 
-                if crate::get_val( check_x + 1, check_y, &points) != "X" {
+                if crate::levels::get_val( check_x + 1, check_y, &points) != "#" &&
+                    crate::levels::get_val( check_x + 1, check_y, &points) != "-" {
                     self.x += PLAYER_STEP_MOVE;
                 }
             },
