@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::{points::Point};
+use crate::{points::Point, game::Game};
 
 pub fn draw_score(font: Font, score: &str) {
     draw_text_ex("SCORE: ", 7.0, 40.0, 
@@ -30,14 +30,16 @@ pub fn get_val(check_x: i32, check_y: i32, points: &Vec<Point>) -> String {
     return result
 }
 
-pub fn draw_map(points: &Vec<Point>) {
+pub fn draw_map(points: &Vec<Point>, game: &mut Game) {
     for point in points {
         match point.value.as_str() {
             "#" => {
                 draw_rectangle(point.x as f32 * 50.0, point.y as f32 * 50.0, 50.0, 50.0, DARKBROWN);
             },
             "-" => {
-                draw_rectangle(point.x as f32 * 50.0, point.y as f32 * 50.0, 50.0, 5.0, WHITE);
+                draw_rectangle(point.x as f32 * 50.0, point.y as f32 * 50.0 + 20.0, 50.0, 5.0, WHITE);
+                game.spawn_gate_x = point.x as f32 * 50.0;
+                game.spawn_gate_y = point.y as f32 * 50.0;
             },
             _ => {},
         };

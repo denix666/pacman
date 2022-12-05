@@ -19,6 +19,8 @@ pub struct Game {
     pub scared_mode_started_at: f64,
     pub siren_played: bool,
     pub last_bonus_was_at: f64,
+    pub spawn_gate_x: f32,
+    pub spawn_gate_y: f32,
 }
 
 impl Game {
@@ -31,6 +33,8 @@ impl Game {
             scared_mode_started_at: 0.0,
             siren_played: false,
             last_bonus_was_at: 0.0,
+            spawn_gate_x: 0.0,
+            spawn_gate_y: 0.0,
         }
     }
 }

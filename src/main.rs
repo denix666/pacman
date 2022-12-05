@@ -87,8 +87,8 @@ async fn main() {
                 enemies.clear();
                 eyes.clear();
                 points = make_map_array(game.lvl_num);
-                player.x = 550.0;
-                player.y = 650.0;
+                player.x = PLAYER_START_X_POS;
+                player.y = PLAYER_START_Y_POS;
                 player.dir = PlayerDir::Left;
                 game.scared_mode = false;
                 game.last_bonus_was_at = get_time();
@@ -118,9 +118,7 @@ async fn main() {
                         let x = rand::thread_rng().gen_range(0..=22);
                         let y = rand::thread_rng().gen_range(0..=10);
                         
-                        if crate::levels::get_val(x,y, &points) != "X" && 
-                            crate::levels::get_val(x,y, &points) != "=" && 
-                            crate::levels::get_val(x,y, &points) != "-" {
+                        if crate::levels::get_val(x,y, &points) == "s" {
                             let mut enemy_in_this_place_already_exist = false;
                             for en in &mut enemies {
                                 if en.x == x as f32 * 50.0 && en.y == y as f32 * 50.0 {
@@ -141,7 +139,7 @@ async fn main() {
                 game_state = GameState::Game;
             },
             GameState::Game => {
-                draw_map(&points);
+                draw_map(&points, &mut game);
                 draw_score(resources.font,&game.score.to_string());
                 player.draw_lives(game.lives);
                 player.update(&points);
@@ -230,7 +228,7 @@ async fn main() {
                 }
 
                 for enemy in &mut enemies {
-                    enemy.update(&points);
+                    enemy.update(&points, &game);
                     enemy.scared_mode = game.scared_mode;
                     if let Some(_i) = enemy.rect.intersect(player.rect) {
                         enemy.destroyed = true;
@@ -269,7 +267,7 @@ async fn main() {
                 player.draw();
             },
             GameState::LevelCompleted => {
-                draw_map(&points);
+                draw_map(&points, &mut game);
                 draw_score(resources.font,&game.score.to_string());
                 player.draw_lives(game.lives);
 
@@ -281,14 +279,14 @@ async fn main() {
 
                 if is_key_pressed(KeyCode::Space) {
                     game.lvl_num += 1;
-                    player.x = 550.0;
-                    player.y = 650.0;
+                    player.x = PLAYER_START_X_POS;
+                    player.y = PLAYER_START_Y_POS;
                     player.dir = PlayerDir::Left;
                     game_state = GameState::InitLevel;
                 }
             },
             GameState::LevelFailed => {
-                draw_map(&points);
+                draw_map(&points, &mut game);
 
                 for coin in &mut small_coins {
                     coin.draw();
@@ -310,8 +308,8 @@ async fn main() {
                 if animations.len() == 0 && is_key_pressed(KeyCode::Space) {
                     if game.lives > 0 {
                         game.lives -= 1;
-                        player.x = 550.0;
-                        player.y = 650.0;
+                        player.x = PLAYER_START_X_POS;
+                        player.y = PLAYER_START_Y_POS;
                         player.dir = PlayerDir::Left;
                         game_state = GameState::Game;
                     } else {
@@ -320,7 +318,7 @@ async fn main() {
                 }
             },
             GameState::GameOver => {
-                draw_map(&points);
+                draw_map(&points, &mut game);
 
                 show_press_space_text(resources.font);
 

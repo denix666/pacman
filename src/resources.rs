@@ -2,7 +2,9 @@ use macroquad::{prelude::*, audio::{Sound, load_sound}};
 
 pub const RES_WIDTH: i32 = 1150;
 pub const RES_HEIGHT: i32 = 750;
-pub const STARTING_AMOUNT_OF_ENEMY: i32 = 2;
+pub const STARTING_AMOUNT_OF_ENEMY: i32 = 0;
+pub const PLAYER_START_X_POS: f32 = 550.0;
+pub const PLAYER_START_Y_POS: f32 = 650.0;
 
 pub struct Resources {
     pub intro_texture: Texture2D,

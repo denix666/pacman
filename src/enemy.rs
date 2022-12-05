@@ -3,6 +3,8 @@ extern crate rand;
 use rand::{Rng};
 use rand::seq::SliceRandom;
 
+use crate::game::Game;
+
 const ANIMATION_SPEED: i32 = 8;
 pub const ENEMY_STEP_MOVE: f32 = 5.0;
 
@@ -30,6 +32,7 @@ pub struct Enemy {
     pub scared_mode: bool,
     cur_frame: usize,
     pub speed: f32,
+    pub inside_spawn: bool,
     pub dir: EnemyDir,
     pub possible_moves_list: Vec<String>,
 }
@@ -118,12 +121,13 @@ impl Enemy {
             cur_frame: 0,
             scared_mode: false,
             dir,
+            inside_spawn: true,
             possible_moves_list: vec![],
             speed: ENEMY_STEP_MOVE,
         }
     }
 
-    pub fn update(&mut self, points: &Vec<crate::points::Point>) {
+    pub fn update(&mut self, points: &Vec<crate::points::Point>, game: &Game) {
         self.possible_moves_list.clear();
 
         match self.dir {
@@ -213,26 +217,43 @@ impl Enemy {
             },
         }
 
-        if self.possible_moves_list.len() > 0 {
-            match self.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
-                "up" => {
-                    self.dir = EnemyDir::Up;
-                },
-                "down" => {
-                    self.dir = EnemyDir::Down;
-                },
-                "left" => {
-                    self.dir = EnemyDir::Left;
-                },
-                "right" => {
-                    self.dir = EnemyDir::Right;
-                },
-                _ => {
-                    panic!("unknown dir");
-                }
-            };
+        if crate::levels::get_val((self.x / 50.0) as i32, (self.y / 50.0) as i32, &points) != "s" {
+            self.inside_spawn = false;
         }
 
+        if self.inside_spawn {
+            // get out from spawn
+            if self.x >= game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "left") {
+                self.dir = EnemyDir::Left;
+            } else if self.x <= game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "right") {
+                self.dir = EnemyDir::Right;
+            } else if self.y >= game.spawn_gate_y && self.possible_moves_list.iter().any(|a| a == "up") {
+                self.dir = EnemyDir::Up;
+            } else if self.possible_moves_list.iter().any(|a| a == "down") {
+                self.dir = EnemyDir::Down;
+            }
+        } else {
+            if self.possible_moves_list.len() > 0 {
+                match self.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
+                    "up" => {
+                        self.dir = EnemyDir::Up;
+                    },
+                    "down" => {
+                        self.dir = EnemyDir::Down;
+                    },
+                    "left" => {
+                        self.dir = EnemyDir::Left;
+                    },
+                    "right" => {
+                        self.dir = EnemyDir::Right;
+                    },
+                    _ => {
+                        panic!("unknown dir");
+                    }
+                };
+            }
+        }
+        
         // define rect
         self.rect.x = self.x;
         self.rect.y = self.y;
