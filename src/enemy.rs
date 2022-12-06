@@ -35,6 +35,7 @@ pub struct Enemy {
     pub inside_spawn: bool,
     pub dir: EnemyDir,
     pub possible_moves_list: Vec<String>,
+    pub can_cross_gate: bool,
 }
 
 impl Enemy {
@@ -124,6 +125,7 @@ impl Enemy {
             inside_spawn: true,
             possible_moves_list: vec![],
             speed: ENEMY_STEP_MOVE,
+            can_cross_gate: false,
         }
     }
 
@@ -135,20 +137,30 @@ impl Enemy {
                 let check_x: i32 = (self.x / 50.0) as i32;
                 let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
                 if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                    self.y -= self.speed;
+                    if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                        self.y -= self.speed;
+                    } else {
+                        if self.can_cross_gate {
+                            self.y -= self.speed;
+                        }
+                    }
                 }
                 
                 if self.y % 50.0 == 0.0 {
                     let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        self.possible_moves_list.push("left".to_string());
+                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                            self.possible_moves_list.push("left".to_string());
+                        }
                     }
 
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                        self.possible_moves_list.push("right".to_string());
+                        if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
+                            self.possible_moves_list.push("right".to_string());
+                        }
                     }
                 }
             },
@@ -156,20 +168,30 @@ impl Enemy {
                 let check_x: i32 = (self.x / 50.0) as i32;
                 let check_y: i32 = (self.y / 50.0) as i32;
                 if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                    self.y += self.speed;
+                    if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
+                        self.y += self.speed;
+                    } else {
+                        if self.can_cross_gate {
+                            self.y += self.speed;
+                        }
+                    }
                 }
                 
                 if self.y % 50.0 == 0.0 {
                     let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        self.possible_moves_list.push("left".to_string());
+                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                            self.possible_moves_list.push("left".to_string());
+                        }
                     }
 
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                        self.possible_moves_list.push("right".to_string());
+                        if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
+                            self.possible_moves_list.push("right".to_string());
+                        }
                     }
                 }
             },
@@ -177,20 +199,30 @@ impl Enemy {
                 let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
                 let check_y: i32 = (self.y / 50.0) as i32;
                 if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                    self.x -= self.speed;
+                    if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                        self.x -= self.speed;
+                    } else {
+                        if self.can_cross_gate {
+                            self.x -= self.speed;
+                        }
+                    }
                 }
                 
                 if self.x % 50.0 == 0.0 {
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        self.possible_moves_list.push("up".to_string());
+                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                            self.possible_moves_list.push("up".to_string());
+                        }
                     }
 
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                        self.possible_moves_list.push("down".to_string());
+                        if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
+                            self.possible_moves_list.push("down".to_string());
+                        }
                     }
                 }
             },
@@ -198,20 +230,30 @@ impl Enemy {
                 let check_x: i32 = (self.x / 50.0) as i32;
                 let check_y: i32 = (self.y / 50.0) as i32;
                 if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                    self.x += self.speed;
+                    if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
+                        self.x += self.speed;
+                    } else {
+                        if self.can_cross_gate {
+                            self.x += self.speed;
+                        }
+                    }
                 }
                 
                 if self.x % 50.0 == 0.0 {
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        self.possible_moves_list.push("up".to_string());
+                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                            self.possible_moves_list.push("up".to_string());
+                        }
                     }
 
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
                     if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                        self.possible_moves_list.push("down".to_string());
+                        if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
+                            self.possible_moves_list.push("down".to_string());
+                        }
                     }
                 }
             },
@@ -221,17 +263,17 @@ impl Enemy {
             self.inside_spawn = false;
         }
 
-        if self.inside_spawn {
+        if self.inside_spawn && self.can_cross_gate {
             // get out from spawn
             if self.x >= game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "left") {
                 self.dir = EnemyDir::Left;
-            } else if self.x <= game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "right") {
+            } else if self.x < game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "right") {
                 self.dir = EnemyDir::Right;
-            } else if self.y >= game.spawn_gate_y && self.possible_moves_list.iter().any(|a| a == "up") {
+            } else if self.y > game.spawn_gate_y + 50.0 && self.possible_moves_list.iter().any(|a| a == "up") {
                 self.dir = EnemyDir::Up;
             } else if self.possible_moves_list.iter().any(|a| a == "down") {
-                self.dir = EnemyDir::Down;
-            }
+                self.dir = EnemyDir::Up;
+            } 
         } else {
             if self.possible_moves_list.len() > 0 {
                 match self.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {

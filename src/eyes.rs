@@ -21,6 +21,7 @@ pub struct Eyes {
     right_texture: Texture2D,
     pub dir: Dir,
     pub possible_moves_list: Vec<String>,
+    pub inside_spawn: bool,
 }
 
 impl Eyes {
@@ -35,13 +36,16 @@ impl Eyes {
             right_texture: load_texture("assets/images/eyes/right.png").await.unwrap(),
             dir: Dir::Left,
             possible_moves_list: vec![],
+            inside_spawn: false,
         }
     }
 
     pub fn update(&mut self, points: &Vec<crate::points::Point>) {
         self.possible_moves_list.clear();
 
-        
+        if crate::levels::get_val((self.x / 50.0) as i32, (self.y / 50.0) as i32, &points) == "s" {
+            self.inside_spawn = true;
+        }
 
         match self.dir {
             Dir::Up => {

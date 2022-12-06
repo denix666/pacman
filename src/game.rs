@@ -21,6 +21,7 @@ pub struct Game {
     pub last_bonus_was_at: f64,
     pub spawn_gate_x: f32,
     pub spawn_gate_y: f32,
+    pub last_enemy_released: f64,
 }
 
 impl Game {
@@ -35,6 +36,7 @@ impl Game {
             last_bonus_was_at: 0.0,
             spawn_gate_x: 0.0,
             spawn_gate_y: 0.0,
+            last_enemy_released: 0.0,
         }
     }
 }

@@ -92,6 +92,7 @@ async fn main() {
                 player.dir = PlayerDir::Left;
                 game.scared_mode = false;
                 game.last_bonus_was_at = get_time();
+                game.last_enemy_released = get_time();
 
                 // Load map objects
                 for point in &mut points {
@@ -229,7 +230,18 @@ async fn main() {
 
                 for enemy in &mut enemies {
                     enemy.update(&points, &game);
-                    enemy.scared_mode = game.scared_mode;
+
+                    if enemy.inside_spawn && get_time() - game.last_enemy_released > 5.0 {
+                        enemy.can_cross_gate = true;
+                        game.last_enemy_released = get_time();
+                    }
+
+                    if crate::levels::get_val((enemy.x / 50.0) as i32, (enemy.y / 50.0) as i32, &points) != "s" {
+                        enemy.scared_mode = game.scared_mode;
+                    } else {
+                        enemy.scared_mode = false;
+                    }
+
                     if let Some(_i) = enemy.rect.intersect(player.rect) {
                         enemy.destroyed = true;
                         if enemy.scared_mode {
@@ -247,7 +259,7 @@ async fn main() {
                             );
                             play_sound(resources.die, PlaySoundParams {
                                 looped: false,
-                                volume: 0.4,
+                                volume: 0.2,
                             });
                             game_state = GameState::LevelFailed;
                         }
@@ -258,6 +270,13 @@ async fn main() {
                 for eye in &mut eyes {
                     eye.update(&points);
                     eye.draw();
+
+                    if eye.inside_spawn {
+                        eye.destroyed = true;
+                        enemies.push(
+                            Enemy::new((eye.x / 50.0).round() * 50.0 , (eye.y / 50.0).round() * 50.0).await,
+                        );
+                    }
                 }
 
                 if small_coins.len() == 0 {
@@ -311,6 +330,36 @@ async fn main() {
                         player.x = PLAYER_START_X_POS;
                         player.y = PLAYER_START_Y_POS;
                         player.dir = PlayerDir::Left;
+                        
+                        //load enemies
+                        enemies.clear();
+                        eyes.clear();
+                        game.last_enemy_released = get_time();
+                        let mut item_placed_successfully: bool;
+                        for _ in 1..=STARTING_AMOUNT_OF_ENEMY + game.lvl_num {
+                            item_placed_successfully = false;
+                            while !item_placed_successfully {
+                                let x = rand::thread_rng().gen_range(0..=22);
+                                let y = rand::thread_rng().gen_range(0..=10);
+                                
+                                if crate::levels::get_val(x,y, &points) == "s" {
+                                    let mut enemy_in_this_place_already_exist = false;
+                                    for en in &mut enemies {
+                                        if en.x == x as f32 * 50.0 && en.y == y as f32 * 50.0 {
+                                            enemy_in_this_place_already_exist = true;
+                                            break;
+                                        }
+                                    }
+                                    if !enemy_in_this_place_already_exist {
+                                        enemies.push(
+                                            Enemy::new(x as f32 * 50.0, y as f32 * 50.0).await,
+                                        );
+                                        item_placed_successfully = true;
+                                    }
+                                }
+                            }
+                        }
+
                         game_state = GameState::Game;
                     } else {
                         game_state = GameState::GameOver;
