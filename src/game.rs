@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::resources::STARTING_AMOUNT_OF_ENEMY;
+
 pub fn show_press_space_text(font: Font) {
     draw_text_ex("Press 'SPACE' to continue", 220.0, 450.0, 
         TextParams {
@@ -22,6 +24,7 @@ pub struct Game {
     pub spawn_gate_x: f32,
     pub spawn_gate_y: f32,
     pub last_enemy_released: f64,
+    pub amount_of_enemy: i32,
 }
 
 impl Game {
@@ -37,6 +40,7 @@ impl Game {
             spawn_gate_x: 0.0,
             spawn_gate_y: 0.0,
             last_enemy_released: 0.0,
+            amount_of_enemy: STARTING_AMOUNT_OF_ENEMY,
         }
     }
 }

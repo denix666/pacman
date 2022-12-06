@@ -11,6 +11,9 @@ use points::*;
 mod die_animation;
 use die_animation::*;
 
+mod bonus_animation;
+use bonus_animation::*;
+
 mod levels;
 use levels::*;
 
@@ -66,7 +69,8 @@ async fn main() {
     let mut player = Player::new().await;
     let mut bonuses: Vec<Bonus> = Vec::new();
     let mut enemies: Vec<Enemy> = Vec::new();
-    let mut animations: Vec<DieAnimation> = Vec::new();
+    let mut die_animations: Vec<DieAnimation> = Vec::new();
+    let mut bonus_animations: Vec<BonusAnimation> = Vec::new();
     let mut eyes: Vec<Eyes> = Vec::new();
 
     loop {
@@ -74,10 +78,16 @@ async fn main() {
 
         match game_state {
             GameState::Intro => {
-                game.score = 0;
-                game.lives = 2;
-                game.lvl_num = 1;
-                game_state = GameState::InitLevel;
+                draw_texture(resources.intro_texture, 0.0, 0.0, WHITE);
+                show_press_space_text(resources.font);
+
+                if is_key_pressed(KeyCode::Space) {
+                    game.score = 0;
+                    game.lives = 2;
+                    game.lvl_num = 1;
+                    game.amount_of_enemy = STARTING_AMOUNT_OF_ENEMY;
+                    game_state = GameState::InitLevel;
+                }
             },
             GameState::InitLevel => {
                 points.clear();
@@ -113,7 +123,7 @@ async fn main() {
 
                 //load enemies
                 let mut item_placed_successfully: bool;
-                for _ in 1..=STARTING_AMOUNT_OF_ENEMY + game.lvl_num {
+                for _ in 1..=game.amount_of_enemy {
                     item_placed_successfully = false;
                     while !item_placed_successfully {
                         let x = rand::thread_rng().gen_range(0..=22);
@@ -220,12 +230,19 @@ async fn main() {
 
                     if let Some(_i) = bonus.rect.intersect(player.rect) {
                         bonus.destroyed = true;
-                        game.score += 150;
+                        game.score += 100;
                         play_sound(resources.bonus, PlaySoundParams {
                             looped: false,
                             volume: 0.4,
                         });
+                        bonus_animations.push(
+                            BonusAnimation::new(bonus.x, bonus.y).await,
+                        );
                     }
+                }
+
+                for animation in &mut bonus_animations {
+                    animation.draw();
                 }
 
                 for enemy in &mut enemies {
@@ -254,7 +271,7 @@ async fn main() {
                                 Eyes::new((enemy.x / 50.0).round() * 50.0 , (enemy.y / 50.0).round() * 50.0).await,
                             );
                         } else {
-                            animations.push(
+                            die_animations.push(
                                 DieAnimation::new(player.x, player.y).await,
                             );
                             play_sound(resources.die, PlaySoundParams {
@@ -290,7 +307,7 @@ async fn main() {
                 draw_score(resources.font,&game.score.to_string());
                 player.draw_lives(game.lives);
 
-                if game.lvl_num == 2 {
+                if game.lvl_num == 3 {
                     game.lvl_num = 0;
                 }
 
@@ -298,6 +315,9 @@ async fn main() {
 
                 if is_key_pressed(KeyCode::Space) {
                     game.lvl_num += 1;
+                    if game.amount_of_enemy < 6 {
+                        game.amount_of_enemy += 1;
+                    }
                     player.x = PLAYER_START_X_POS;
                     player.y = PLAYER_START_Y_POS;
                     player.dir = PlayerDir::Left;
@@ -320,11 +340,11 @@ async fn main() {
                 player.draw_lives(game.lives);
                 draw_score(resources.font,&game.score.to_string());
 
-                for animation in &mut animations {
+                for animation in &mut die_animations {
                     animation.draw();
                 }
 
-                if animations.len() == 0 && is_key_pressed(KeyCode::Space) {
+                if die_animations.len() == 0 && is_key_pressed(KeyCode::Space) {
                     if game.lives > 0 {
                         game.lives -= 1;
                         player.x = PLAYER_START_X_POS;
@@ -336,7 +356,7 @@ async fn main() {
                         eyes.clear();
                         game.last_enemy_released = get_time();
                         let mut item_placed_successfully: bool;
-                        for _ in 1..=STARTING_AMOUNT_OF_ENEMY + game.lvl_num {
+                        for _ in 1..=game.amount_of_enemy {
                             item_placed_successfully = false;
                             while !item_placed_successfully {
                                 let x = rand::thread_rng().gen_range(0..=22);
@@ -406,9 +426,16 @@ async fn main() {
             None => {},
         };
 
-        match animations.iter().position(|x| x.destroyed == true) {
+        match die_animations.iter().position(|x| x.destroyed == true) {
             Some(idx) => {
-                animations.remove(idx);
+                die_animations.remove(idx);
+            },
+            None => {},
+        };
+
+        match bonus_animations.iter().position(|x| x.destroyed == true) {
+            Some(idx) => {
+                bonus_animations.remove(idx);
             },
             None => {},
         };
