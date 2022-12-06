@@ -3,7 +3,8 @@ name: test
 on:
   push
 
-win_build:
+jobs:
+  win_build:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
