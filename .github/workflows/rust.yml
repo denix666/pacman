@@ -31,6 +31,14 @@ jobs:
   win_build:
     runs-on: windows-latest
     steps:
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        target: x86_64-pc-windows-msvc
+        override: true
+
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --release
@@ -38,7 +46,7 @@ jobs:
     - shell: bash
       run: |
         mv target/release/rusted-pacman rusted-pacman
-        zip rusted-pacman.zip rusted-pacman assets
+        7z a rusted-pacman.zip rusted-pacman.exe assets
         
     - name: Release
       uses: softprops/action-gh-release@v1
