@@ -19,14 +19,14 @@ jobs:
 
     - shell: bash
       run: |
-        mv target/release/pacman pacman
-        chmod 777 pacman
-        tar cpfz pacman.tar.gz pacman assets
+        mv target/release/rusted-pacman rusted-pacman
+        chmod 777 rusted-pacman
+        tar cpfz rusted-pacman.tar.gz rusted-pacman assets
         
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: pacman.tar.gz
+        files: rusted-pacman.tar.gz
 
   win_build:
     runs-on: windows-latest
@@ -37,10 +37,10 @@ jobs:
 
     - shell: bash
       run: |
-        mv target/release/pacman pacman
-        zip pacman.zip pacman assets
+        mv target/release/rusted-pacman rusted-pacman
+        zip rusted-pacman.zip rusted-pacman assets
         
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: pacman.zip
+        files: rusted-pacman.zip
