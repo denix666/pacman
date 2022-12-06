@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  linux_build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Prep
+      run: sudo apt-get install libasound-dev -y
+      
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --release
+
+    - shell: bash
+      run: |
+        mv target/release/pacman pacman
+        chmod 777 pacman
+        tar cpfz pacman.tar.gz pacman assets
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: pacman.tar.gz
+
+  win_build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --release
+
+    - shell: bash
+      run: |
+        mv target/release/pacman pacman
+        zip pacman.zip pacman assets
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: pacman.zip
