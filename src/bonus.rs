@@ -1,6 +1,4 @@
 use macroquad::prelude::*;
-extern crate rand;
-use rand::{Rng};
 
 pub struct Bonus {
     pub x: f32,
@@ -13,7 +11,7 @@ pub struct Bonus {
 
 impl Bonus {
     pub async fn new(x:f32, y:f32)  -> Self {
-        let bonus_type: &str = match rand::thread_rng().gen_range(0..=3) { 
+        let bonus_type: &str = match ::rand::random_range(0..=3) { 
             0 => "apple",
             1 => "cake",
             2 => "cherry",
@@ -32,7 +30,7 @@ impl Bonus {
     }
 
     pub fn draw(&mut self) {
-        draw_texture(self.texture, self.x, self.y, WHITE);
+        draw_texture(&self.texture, self.x, self.y, WHITE);
 
         // define rect
         self.rect.x = self.x + 15.0;

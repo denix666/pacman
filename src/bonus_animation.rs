@@ -31,7 +31,7 @@ impl BonusAnimation {
 
     pub fn draw(&mut self) {
         if !self.destroyed {
-            draw_texture(self.textures[self.cur_frame], self.x, self.y, WHITE);
+            draw_texture(&self.textures[self.cur_frame], self.x, self.y, WHITE);
             self.update_interval += 1;
             if self.update_interval > ANIMATION_SPEED {
                 self.update_interval = 0;

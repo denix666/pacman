@@ -71,7 +71,7 @@ impl Player {
         let ly = 0.0;
         for i in 0..num_of_lives {
             let lx = (RES_WIDTH as f32 - 50.0) - i as f32 * 50.0;
-            draw_texture(self.right_textures[1], lx, ly, WHITE);
+            draw_texture(&self.right_textures[1], lx, ly, WHITE);
         }
     }
 
@@ -194,16 +194,16 @@ impl Player {
 
         match self.dir {
             PlayerDir::Up => {
-                draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                draw_texture(&self.up_textures[self.cur_frame], self.x, self.y, WHITE);
             },
             PlayerDir::Down => {
-                draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                draw_texture(&self.down_textures[self.cur_frame], self.x, self.y, WHITE);
             },
             PlayerDir::Left => {
-                draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                draw_texture(&self.left_textures[self.cur_frame], self.x, self.y, WHITE);
             },
             PlayerDir::Right => {
-                draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                draw_texture(&self.right_textures[self.cur_frame], self.x, self.y, WHITE);
             },
         }
     }

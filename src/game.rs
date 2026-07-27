@@ -2,10 +2,10 @@ use macroquad::prelude::*;
 
 use crate::resources::STARTING_AMOUNT_OF_ENEMY;
 
-pub fn show_press_space_text(font: Font) {
-    draw_text_ex("Press 'SPACE' to continue", 220.0, 450.0, 
+pub fn show_press_space_text(font: &Font) {
+    draw_text_ex("Press 'SPACE' to continue", 220.0, 450.0,
         TextParams {
-            font,
+            font: Some(font),
             font_size: 40,
             color: WHITE,
             ..Default::default()

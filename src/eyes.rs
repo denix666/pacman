@@ -1,6 +1,5 @@
 use macroquad::prelude::*;
-extern crate rand;
-use rand::seq::SliceRandom;
+use ::rand::seq::IndexedRandom;
 
 pub const STEP_MOVE: f32 = 10.0;
 
@@ -136,7 +135,7 @@ impl Eyes {
         }
 
         if self.possible_moves_list.len() > 0 {
-            match self.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
+            match self.possible_moves_list.choose(&mut ::rand::rng()).unwrap().as_str() {
                 "up" => {
                     self.dir = Dir::Up;
                 },
@@ -159,16 +158,16 @@ impl Eyes {
     pub fn draw(&mut self) {
         match self.dir {
             Dir::Up => {
-                draw_texture(self.up_texture, self.x, self.y, WHITE);
+                draw_texture(&self.up_texture, self.x, self.y, WHITE);
             },
             Dir::Down => {
-                draw_texture(self.down_texture, self.x, self.y, WHITE);
+                draw_texture(&self.down_texture, self.x, self.y, WHITE);
             },
             Dir::Left => {
-                draw_texture(self.left_texture, self.x, self.y, WHITE);
+                draw_texture(&self.left_texture, self.x, self.y, WHITE);
             },
             Dir::Right => {
-                draw_texture(self.right_texture, self.x, self.y, WHITE);
+                draw_texture(&self.right_texture, self.x, self.y, WHITE);
             },
         }
     }

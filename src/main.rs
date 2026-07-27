@@ -1,6 +1,4 @@
 use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
-extern crate rand;
-use rand::{Rng};
 
 mod resources;
 use resources::*;
@@ -78,8 +76,8 @@ async fn main() {
 
         match game_state {
             GameState::Intro => {
-                draw_texture(resources.intro_texture, 0.0, 0.0, WHITE);
-                show_press_space_text(resources.font);
+                draw_texture(&resources.intro_texture, 0.0, 0.0, WHITE);
+                show_press_space_text(&resources.font);
 
                 if is_key_pressed(KeyCode::Space) {
                     game.score = 0;
@@ -126,8 +124,8 @@ async fn main() {
                 for _ in 1..=game.amount_of_enemy {
                     item_placed_successfully = false;
                     while !item_placed_successfully {
-                        let x = rand::thread_rng().gen_range(0..=22);
-                        let y = rand::thread_rng().gen_range(0..=10);
+                        let x = ::rand::random_range(0..=22);
+                        let y = ::rand::random_range(0..=10);
                         
                         if crate::levels::get_val(x,y, &points) == "s" {
                             let mut enemy_in_this_place_already_exist = false;
@@ -151,7 +149,7 @@ async fn main() {
             },
             GameState::Game => {
                 draw_map(&points, &mut game);
-                draw_score(resources.font,&game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string());
                 player.draw_lives(game.lives);
                 player.update(&points);
                 
@@ -161,7 +159,7 @@ async fn main() {
                     if let Some(_i) = coin.rect.intersect(player.rect) {
                         coin.destroyed = true;
                         game.score += 10;
-                        play_sound(resources.coin, PlaySoundParams {
+                        play_sound(&resources.coin, PlaySoundParams {
                             looped: false,
                             volume: 0.4,
                         });
@@ -176,7 +174,7 @@ async fn main() {
                         game.scared_mode = true;
                         game.scared_mode_started_at = get_time();
                         game.score += 50;
-                        play_sound(resources.big_coin, PlaySoundParams {
+                        play_sound(&resources.big_coin, PlaySoundParams {
                             looped: false,
                             volume: 0.4,
                         });
@@ -186,7 +184,7 @@ async fn main() {
                 // Play warning for scarred mode end
                 if get_time() - game.scared_mode_started_at > 4.0 {
                     if !game.siren_played && game.scared_mode {
-                        play_sound(resources.siren, PlaySoundParams {
+                        play_sound(&resources.siren, PlaySoundParams {
                             looped: false,
                             volume: 0.7,
                         });
@@ -204,8 +202,8 @@ async fn main() {
                 if get_time() - game.last_bonus_was_at > 15.0 {
                     let mut item_placed_successfully: bool = false;
                     while !item_placed_successfully {
-                        let x = rand::thread_rng().gen_range(0..=22);
-                        let y = rand::thread_rng().gen_range(0..=10);
+                        let x = ::rand::random_range(0..=22);
+                        let y = ::rand::random_range(0..=10);
                         if crate::levels::get_val(x,y, &points) != "#" && 
                             crate::levels::get_val(x,y, &points) != "=" && 
                             crate::levels::get_val(x,y, &points) != "-" && 
@@ -231,7 +229,7 @@ async fn main() {
                     if let Some(_i) = bonus.rect.intersect(player.rect) {
                         bonus.destroyed = true;
                         game.score += 100;
-                        play_sound(resources.bonus, PlaySoundParams {
+                        play_sound(&resources.bonus, PlaySoundParams {
                             looped: false,
                             volume: 0.4,
                         });
@@ -262,7 +260,7 @@ async fn main() {
                     if let Some(_i) = enemy.rect.intersect(player.rect) {
                         enemy.destroyed = true;
                         if enemy.scared_mode {
-                            play_sound(resources.eat_ghost, PlaySoundParams {
+                            play_sound(&resources.eat_ghost, PlaySoundParams {
                                 looped: false,
                                 volume: 0.2,
                             });
@@ -274,7 +272,7 @@ async fn main() {
                             die_animations.push(
                                 DieAnimation::new(player.x, player.y).await,
                             );
-                            play_sound(resources.die, PlaySoundParams {
+                            play_sound(&resources.die, PlaySoundParams {
                                 looped: false,
                                 volume: 0.2,
                             });
@@ -304,14 +302,14 @@ async fn main() {
             },
             GameState::LevelCompleted => {
                 draw_map(&points, &mut game);
-                draw_score(resources.font,&game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string());
                 player.draw_lives(game.lives);
 
                 if game.lvl_num == 3 {
                     game.lvl_num = 0;
                 }
 
-                show_press_space_text(resources.font);
+                show_press_space_text(&resources.font);
 
                 if is_key_pressed(KeyCode::Space) {
                     game.lvl_num += 1;
@@ -338,7 +336,7 @@ async fn main() {
                 }
 
                 player.draw_lives(game.lives);
-                draw_score(resources.font,&game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string());
 
                 for animation in &mut die_animations {
                     animation.draw();
@@ -359,8 +357,8 @@ async fn main() {
                         for _ in 1..=game.amount_of_enemy {
                             item_placed_successfully = false;
                             while !item_placed_successfully {
-                                let x = rand::thread_rng().gen_range(0..=22);
-                                let y = rand::thread_rng().gen_range(0..=10);
+                                let x = ::rand::random_range(0..=22);
+                                let y = ::rand::random_range(0..=10);
                                 
                                 if crate::levels::get_val(x,y, &points) == "s" {
                                     let mut enemy_in_this_place_already_exist = false;
@@ -389,7 +387,7 @@ async fn main() {
             GameState::GameOver => {
                 draw_map(&points, &mut game);
 
-                show_press_space_text(resources.font);
+                show_press_space_text(&resources.font);
 
                 if is_key_pressed(KeyCode::Space) {
                     game_state = GameState::Intro;
@@ -397,55 +395,13 @@ async fn main() {
             },
         };
 
-        // GC
-        match small_coins.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                small_coins.remove(idx);
-            },
-            None => {},
-        };
-
-        match big_coins.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                big_coins.remove(idx);
-            },
-            None => {},
-        };
-
-        match bonuses.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                bonuses.remove(idx);
-            },
-            None => {},
-        };
-
-        match enemies.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                enemies.remove(idx);
-            },
-            None => {},
-        };
-
-        match die_animations.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                die_animations.remove(idx);
-            },
-            None => {},
-        };
-
-        match bonus_animations.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                bonus_animations.remove(idx);
-            },
-            None => {},
-        };
-
-        match eyes.iter().position(|x| x.destroyed == true) {
-            Some(idx) => {
-                eyes.remove(idx);
-            },
-            None => {},
-        };
+        small_coins.retain(|x| !x.destroyed);
+        big_coins.retain(|x| !x.destroyed);
+        bonuses.retain(|x| !x.destroyed);
+        enemies.retain(|x| !x.destroyed);
+        die_animations.retain(|x| !x.destroyed);
+        bonus_animations.retain(|x| !x.destroyed);
+        eyes.retain(|x| !x.destroyed);
 
         next_frame().await
     }

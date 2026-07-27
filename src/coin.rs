@@ -21,7 +21,7 @@ impl Coin {
     }
 
     pub fn draw(&mut self) {
-        draw_texture(self.texture, self.x, self.y, WHITE);
+        draw_texture(&self.texture, self.x, self.y, WHITE);
 
         // define rect
         self.rect.x = self.x + 15.0;

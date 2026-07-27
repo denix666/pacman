@@ -1,19 +1,19 @@
 use macroquad::prelude::*;
 use crate::{points::Point, game::Game};
 
-pub fn draw_score(font: Font, score: &str) {
-    draw_text_ex("SCORE: ", 7.0, 40.0, 
+pub fn draw_score(font: &Font, score: &str) {
+    draw_text_ex("SCORE: ", 7.0, 40.0,
         TextParams {
-            font,
+            font: Some(font),
             font_size: 50,
             color: WHITE,
             ..Default::default()
         },
     );
 
-    draw_text_ex(score, 250.0, 40.0, 
+    draw_text_ex(score, 250.0, 40.0,
         TextParams {
-            font,
+            font: Some(font),
             font_size: 50,
             color: BROWN,
             ..Default::default()

@@ -1,7 +1,5 @@
 use macroquad::prelude::*;
-extern crate rand;
-use rand::{Rng};
-use rand::seq::SliceRandom;
+use ::rand::seq::IndexedRandom;
 
 use crate::game::Game;
 
@@ -17,7 +15,7 @@ pub enum EnemyDir {
 
 pub struct Enemy {
     pub x: f32,
-    pub y: f32, 
+    pub y: f32,
     pub destroyed: bool,
     pub rect: Rect,
     down_textures: Vec<Texture2D>,
@@ -44,8 +42,8 @@ impl Enemy {
         let mut up_sprites:Vec<Texture2D> = Vec::new();
         let mut left_sprites:Vec<Texture2D> = Vec::new();
         let mut right_sprites:Vec<Texture2D> = Vec::new();
-        
-        let enemy_type: &str = match rand::thread_rng().gen_range(0..=3) { 
+
+        let enemy_type: &str = match ::rand::random_range(0..=3) {
             0 => "red",
             1 => "blue",
             2 => "pinc",
@@ -97,13 +95,13 @@ impl Enemy {
             scared_right_sprites.push(load_texture(&path).await.unwrap());
         }
 
-        let dir: EnemyDir = match rand::thread_rng().gen_range(0..=3) { 
+        let dir: EnemyDir = match ::rand::random_range(0..=3) {
             0 => EnemyDir::Down,
             1 => EnemyDir::Left,
             2 => EnemyDir::Right,
             _ => EnemyDir::Up,
         };
-        
+
 
         Self {
             x,
@@ -117,7 +115,7 @@ impl Enemy {
             scared_up_textures: scared_up_sprites,
             scared_left_textures: scared_left_sprites,
             scared_right_textures: scared_right_sprites,
-            rect: Rect::new(0.0, 0.0, 0.0, 0.0),
+            rect: Rect::new(0.0, 0.0, 50.0, 50.0),
             update_interval: 0,
             cur_frame: 0,
             scared_mode: false,
@@ -145,7 +143,7 @@ impl Enemy {
                         }
                     }
                 }
-                
+
                 if self.y % 50.0 == 0.0 {
                     let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
@@ -176,7 +174,7 @@ impl Enemy {
                         }
                     }
                 }
-                
+
                 if self.y % 50.0 == 0.0 {
                     let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
                     let check_y: i32 = (self.y / 50.0) as i32;
@@ -207,7 +205,7 @@ impl Enemy {
                         }
                     }
                 }
-                
+
                 if self.x % 50.0 == 0.0 {
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
@@ -238,7 +236,7 @@ impl Enemy {
                         }
                     }
                 }
-                
+
                 if self.x % 50.0 == 0.0 {
                     let check_x: i32 = (self.x / 50.0) as i32;
                     let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
@@ -273,10 +271,10 @@ impl Enemy {
                 self.dir = EnemyDir::Up;
             } else if self.possible_moves_list.iter().any(|a| a == "down") {
                 self.dir = EnemyDir::Up;
-            } 
+            }
         } else {
             if self.possible_moves_list.len() > 0 {
-                match self.possible_moves_list.choose(&mut rand::thread_rng()).unwrap().as_str() {
+                match self.possible_moves_list.choose(&mut ::rand::rng()).unwrap().as_str() {
                     "up" => {
                         self.dir = EnemyDir::Up;
                     },
@@ -295,7 +293,7 @@ impl Enemy {
                 };
             }
         }
-        
+
         // define rect
         self.rect.x = self.x;
         self.rect.y = self.y;
@@ -314,30 +312,30 @@ impl Enemy {
         match self.dir {
             EnemyDir::Up => {
                 if !self.scared_mode {
-                    draw_texture(self.up_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.up_textures[self.cur_frame], self.x, self.y, WHITE);
                 } else {
-                    draw_texture(self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
                 }
             },
             EnemyDir::Down => {
                 if !self.scared_mode {
-                    draw_texture(self.down_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.down_textures[self.cur_frame], self.x, self.y, WHITE);
                 } else {
-                    draw_texture(self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
                 }
             },
             EnemyDir::Left => {
                 if !self.scared_mode {
-                    draw_texture(self.left_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.left_textures[self.cur_frame], self.x, self.y, WHITE);
                 } else {
-                    draw_texture(self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
                 }
             },
             EnemyDir::Right => {
                 if !self.scared_mode {
-                    draw_texture(self.right_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.right_textures[self.cur_frame], self.x, self.y, WHITE);
                 } else {
-                    draw_texture(self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
+                    draw_texture(&self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
                 }
             },
         }
