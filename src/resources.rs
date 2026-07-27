@@ -5,7 +5,8 @@ pub const RES_HEIGHT: i32 = 750;
 pub const STARTING_AMOUNT_OF_ENEMY: i32 = 3;
 pub const PLAYER_START_X_POS: f32 = 550.0;
 pub const PLAYER_START_Y_POS: f32 = 650.0;
-pub const TARGET_FPS: f32 = 60.0;
+pub const MAP_WIDTH: i32 = 23;
+pub const MAP_PIXEL_WIDTH: f32 = MAP_WIDTH as f32 * 50.0;
 
 fn tex(data: &[u8]) -> Texture2D {
     Texture2D::from_file_with_format(data, None)

@@ -23,9 +23,9 @@ pub struct Game {
     pub last_bonus_was_at: f64,
     pub spawn_gate_x: f32,
     pub spawn_gate_y: f32,
-    pub last_enemy_released: f64,
     pub amount_of_enemy: i32,
     pub next_life_at: i32,
+    pub high_score: i32,
 }
 
 impl Game {
@@ -40,9 +40,15 @@ impl Game {
             last_bonus_was_at: 0.0,
             spawn_gate_x: 0.0,
             spawn_gate_y: 0.0,
-            last_enemy_released: 0.0,
             amount_of_enemy: STARTING_AMOUNT_OF_ENEMY,
             next_life_at: 10000,
+            high_score: 0,
+        }
+    }
+
+    pub fn update_high_score(&mut self) {
+        if self.score > self.high_score {
+            self.high_score = self.score;
         }
     }
 }

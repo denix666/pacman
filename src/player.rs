@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::resources::{Resources, RES_WIDTH};
+use crate::resources::{Resources, RES_WIDTH, MAP_PIXEL_WIDTH};
 
 const ANIMATION_SPEED: i32 = 8;
 pub const PLAYER_STEP_MOVE: f32 = 5.0;
@@ -81,8 +81,8 @@ impl Player {
                 if self.y % 50.0 == 0.0 {
                     let check_x = ((self.x - PLAYER_STEP_MOVE) / 50.0) as i32;
                     let check_y = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y, points) != "#" &&
-                        crate::levels::get_val(check_x, check_y, points) != "-" {
+                    let val = crate::levels::get_val(check_x, check_y, points);
+                    if val != "#" && val != "-" || val == "T" {
                         self.dir = PlayerDir::Left;
                     }
                 }
@@ -91,8 +91,8 @@ impl Player {
                 if self.y % 50.0 == 0.0 {
                     let check_x = (self.x / 50.0) as i32;
                     let check_y = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x + 1, check_y, points) != "#" &&
-                        crate::levels::get_val(check_x + 1, check_y, points) != "-" {
+                    let val = crate::levels::get_val(check_x + 1, check_y, points);
+                    if val != "#" && val != "-" || val == "T" {
                         self.dir = PlayerDir::Right;
                     }
                 }
@@ -119,19 +119,26 @@ impl Player {
             PlayerDir::Left => {
                 let check_x = ((self.x - PLAYER_STEP_MOVE) / 50.0) as i32;
                 let check_y = (self.y / 50.0) as i32;
-                if crate::levels::get_val(check_x, check_y, points) != "#" &&
-                    crate::levels::get_val(check_x, check_y, points) != "-" {
+                let val = crate::levels::get_val(check_x, check_y, points);
+                if val != "#" && val != "-" || val == "T" {
                     self.x -= PLAYER_STEP_MOVE;
                 }
             },
             PlayerDir::Right => {
                 let check_x = (self.x / 50.0) as i32;
                 let check_y = (self.y / 50.0) as i32;
-                if crate::levels::get_val(check_x + 1, check_y, points) != "#" &&
-                    crate::levels::get_val(check_x + 1, check_y, points) != "-" {
+                let val = crate::levels::get_val(check_x + 1, check_y, points);
+                if val != "#" && val != "-" || val == "T" {
                     self.x += PLAYER_STEP_MOVE;
                 }
             },
+        }
+
+        // Tunnel wrap-around
+        if self.x < 0.0 {
+            self.x = MAP_PIXEL_WIDTH - 50.0;
+        } else if self.x >= MAP_PIXEL_WIDTH {
+            self.x = 0.0;
         }
 
         self.rect.x = self.x;

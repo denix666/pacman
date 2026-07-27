@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use crate::{points::Point, game::Game};
 
-pub fn draw_score(font: &Font, score: &str) {
+pub fn draw_score(font: &Font, score: &str, high_score: &str) {
     draw_text_ex("SCORE: ", 7.0, 40.0,
         TextParams {
             font: Some(font),
@@ -16,6 +16,24 @@ pub fn draw_score(font: &Font, score: &str) {
             font: Some(font),
             font_size: 50,
             color: BROWN,
+            ..Default::default()
+        },
+    );
+
+    draw_text_ex("HI: ", 500.0, 40.0,
+        TextParams {
+            font: Some(font),
+            font_size: 50,
+            color: WHITE,
+            ..Default::default()
+        },
+    );
+
+    draw_text_ex(high_score, 640.0, 40.0,
+        TextParams {
+            font: Some(font),
+            font_size: 50,
+            color: YELLOW,
             ..Default::default()
         },
     );
@@ -56,7 +74,7 @@ pub fn make_map_array(lvl_num: i32) -> Vec<Point> {
             "#.#.....#sssss#.....#.#",
             "#.#.###.#sssss#.###.#.#",
             "#.#.###.#sssss#.###.#.#",
-            "#.#.....#######.....#.#",
+            "T.#.....#######.....#.T",
             "#.#####.#######.#####.#",
             "#.....................#",
             "#.###.###.###.###.###.#",
@@ -73,7 +91,7 @@ pub fn make_map_array(lvl_num: i32) -> Vec<Point> {
             "#.#.................#.#",
             "#.###.#.###-###.#.###.#",
             "#.#...#.#sssss#.#...#.#",
-            "#.#.###.#sssss#.###.#.#",
+            "T.#.###.#sssss#.###.#.T",
             "#.......#sssss#.......#",
             "#.#####.#######.#####.#",
             "#.#.................#.#",
@@ -90,7 +108,7 @@ pub fn make_map_array(lvl_num: i32) -> Vec<Point> {
             "#.#.....#sssss#.....#.#",
             "#...###.#sssss#.###...#",
             "#.#####.#sssss#.#####.#",
-            "#.#.....#######.....#.#",
+            "T.#.....#######.....#.T",
             "#.#.###.........###.#.#",
             "#.#.#...#######...#.#.#",
             "#...#.#.#.....#.#.#...#",

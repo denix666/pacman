@@ -15,9 +15,6 @@ use bonus_animation::*;
 mod levels;
 use levels::*;
 
-mod eyes;
-use eyes::*;
-
 mod game;
 use game::*;
 
@@ -55,24 +52,28 @@ pub enum GameState {
     GameOver,
 }
 
-fn spawn_enemies(enemies: &mut Vec<Enemy>, amount: i32, points: &[Point]) {
-    for _ in 0..amount {
-        let mut placed = false;
-        while !placed {
-            let x = ::rand::random_range(0..=22);
-            let y = ::rand::random_range(0..=10);
+fn spawn_enemies(points: &[Point], game: &Game) -> Vec<Enemy> {
+    let mut enemies = Vec::new();
 
-            if get_val(x, y, points) == "s" {
-                let already_exists = enemies.iter().any(|en| {
-                    en.x == x as f32 * 50.0 && en.y == y as f32 * 50.0
-                });
-                if !already_exists {
-                    enemies.push(Enemy::new(x as f32 * 50.0, y as f32 * 50.0));
-                    placed = true;
-                }
-            }
+    // Find spawn cells ("s") to place ghosts at fixed positions
+    let mut spawn_cells: Vec<(f32, f32)> = Vec::new();
+    for point in points {
+        if point.value == "s" {
+            spawn_cells.push((point.x as f32 * 50.0, point.y as f32 * 50.0));
         }
     }
+
+    // Place ghosts in the house: one of each color up to amount_of_enemy
+    // Spread them across available spawn cells
+    let colors = [0, 1, 2, 3]; // red, blue, pink, green
+    for i in 0..game.amount_of_enemy as usize {
+        let color = colors[i % 4];
+        let cell_idx = i % spawn_cells.len();
+        let (x, y) = spawn_cells[cell_idx];
+        enemies.push(Enemy::new(x, y, color));
+    }
+
+    enemies
 }
 
 #[macroquad::main(window_conf)]
@@ -88,17 +89,29 @@ async fn main() {
     let mut enemies: Vec<Enemy> = Vec::new();
     let mut die_animations: Vec<DieAnimation> = Vec::new();
     let mut bonus_animations: Vec<BonusAnimation> = Vec::new();
-    let mut eyes: Vec<Eyes> = Vec::new();
+    let mut last_release_time: f64 = 0.0;
+    let mut ghosts_released: i32 = 0;
 
     loop {
         clear_background(BLACK);
-
-        let dt_scale = get_frame_time() * TARGET_FPS;
 
         match game_state {
             GameState::Intro => {
                 draw_texture(&resources.intro_texture, 0.0, 0.0, WHITE);
                 show_press_space_text(&resources.font);
+
+                if game.high_score > 0 {
+                    draw_text_ex(
+                        &format!("HIGH SCORE: {}", game.high_score),
+                        350.0, 500.0,
+                        TextParams {
+                            font: Some(&resources.font),
+                            font_size: 35,
+                            color: YELLOW,
+                            ..Default::default()
+                        },
+                    );
+                }
 
                 if is_key_pressed(KeyCode::Space) {
                     game.score = 0;
@@ -119,14 +132,14 @@ async fn main() {
                 small_coins.clear();
                 bonuses.clear();
                 enemies.clear();
-                eyes.clear();
                 points = make_map_array(game.lvl_num);
                 player.x = PLAYER_START_X_POS;
                 player.y = PLAYER_START_Y_POS;
                 player.dir = PlayerDir::Left;
                 game.scared_mode = false;
                 game.last_bonus_was_at = get_time();
-                game.last_enemy_released = get_time();
+                last_release_time = get_time();
+                ghosts_released = 0;
 
                 for point in &points {
                     match point.value.as_str() {
@@ -140,12 +153,20 @@ async fn main() {
                     };
                 }
 
-                spawn_enemies(&mut enemies, game.amount_of_enemy, &points);
+                enemies = spawn_enemies(&points, &game);
+
+                // Release first ghost immediately
+                if !enemies.is_empty() {
+                    enemies[0].release();
+                    ghosts_released = 1;
+                    last_release_time = get_time();
+                }
+
                 game_state = GameState::Game;
             },
             GameState::Game => {
                 draw_map(&points, &mut game);
-                draw_score(&resources.font, &game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string(), &game.high_score.to_string());
                 player.draw_lives(game.lives, &resources);
                 player.update(&points);
 
@@ -172,9 +193,13 @@ async fn main() {
                             looped: false,
                             volume: 0.4,
                         });
+                        for enemy in &mut enemies {
+                            enemy.immune_to_scared = false;
+                        }
                     }
                 }
 
+                // Scared mode warning
                 if get_time() - game.scared_mode_started_at > 4.0 {
                     if !game.siren_played && game.scared_mode {
                         play_sound(&resources.siren_snd, PlaySoundParams {
@@ -185,23 +210,33 @@ async fn main() {
                     }
                 }
 
+                // End scared mode
                 if get_time() - game.scared_mode_started_at > 6.0 {
                     game.scared_mode = false;
                     game.siren_played = false;
                 }
 
+                // Release ghosts one by one every 4 seconds
+                if ghosts_released < enemies.len() as i32 && get_time() - last_release_time > 4.0 {
+                    enemies[ghosts_released as usize].release();
+                    ghosts_released += 1;
+                    last_release_time = get_time();
+                }
+
                 // Generate bonus
                 if get_time() - game.last_bonus_was_at > 15.0 {
                     let mut placed = false;
-                    while !placed {
+                    let mut attempts = 0;
+                    while !placed && attempts < 100 {
                         let x = ::rand::random_range(0..=22);
                         let y = ::rand::random_range(0..=10);
                         let val = get_val(x, y, &points);
-                        if val != "#" && val != "=" && val != "-" && val != "s" && val != "O" {
+                        if val != "#" && val != "=" && val != "-" && val != "s" && val != "O" && val != "T" {
                             bonuses.push(Bonus::new(x as f32 * 50.0, y as f32 * 50.0));
                             game.last_bonus_was_at = get_time();
                             placed = true;
                         }
+                        attempts += 1;
                     }
                 }
 
@@ -226,53 +261,36 @@ async fn main() {
                 }
 
                 for enemy in &mut enemies {
-                    enemy.update(&points, &game);
-
-                    if enemy.inside_spawn && get_time() - game.last_enemy_released > 5.0 {
-                        enemy.can_cross_gate = true;
-                        game.last_enemy_released = get_time();
-                    }
-
-                    if get_val((enemy.x / 50.0) as i32, (enemy.y / 50.0) as i32, &points) != "s" {
+                    if enemy.state == GhostState::Active && !enemy.immune_to_scared {
                         enemy.scared_mode = game.scared_mode;
-                    } else {
+                    } else if enemy.state != GhostState::Active {
                         enemy.scared_mode = false;
                     }
 
-                    if let Some(_i) = enemy.rect.intersect(player.rect) {
-                        enemy.destroyed = true;
-                        if enemy.scared_mode {
-                            play_sound(&resources.eat_ghost_snd, PlaySoundParams {
-                                looped: false,
-                                volume: 0.2,
-                            });
-                            game.score += 150;
-                            eyes.push(Eyes::new(
-                                (enemy.x / 50.0).round() * 50.0,
-                                (enemy.y / 50.0).round() * 50.0,
-                            ));
-                        } else {
-                            die_animations.push(DieAnimation::new(player.x, player.y));
-                            play_sound(&resources.die_snd, PlaySoundParams {
-                                looped: false,
-                                volume: 0.2,
-                            });
-                            game_state = GameState::LevelFailed;
+                    enemy.update(&points, &game, player.x, player.y, &player.dir);
+
+                    // Collision
+                    if enemy.is_collidable() {
+                        if let Some(_i) = enemy.rect.intersect(player.rect) {
+                            if enemy.scared_mode {
+                                play_sound(&resources.eat_ghost_snd, PlaySoundParams {
+                                    looped: false,
+                                    volume: 0.2,
+                                });
+                                game.score += 150;
+                                enemy.become_eyes();
+                            } else {
+                                die_animations.push(DieAnimation::new(player.x, player.y));
+                                play_sound(&resources.die_snd, PlaySoundParams {
+                                    looped: false,
+                                    volume: 0.2,
+                                });
+                                game_state = GameState::LevelFailed;
+                            }
                         }
                     }
-                    enemy.draw(&resources);
-                }
 
-                for eye in &mut eyes {
-                    eye.update(&points);
-                    eye.draw(&resources);
-                    if eye.inside_spawn {
-                        eye.destroyed = true;
-                        enemies.push(Enemy::new(
-                            (eye.x / 50.0).round() * 50.0,
-                            (eye.y / 50.0).round() * 50.0,
-                        ));
-                    }
+                    enemy.draw(&resources);
                 }
 
                 if game.score >= game.next_life_at {
@@ -284,6 +302,8 @@ async fn main() {
                     });
                 }
 
+                game.update_high_score();
+
                 if small_coins.is_empty() {
                     game_state = GameState::LevelCompleted;
                 }
@@ -292,7 +312,7 @@ async fn main() {
             },
             GameState::LevelCompleted => {
                 draw_map(&points, &mut game);
-                draw_score(&resources.font, &game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string(), &game.high_score.to_string());
                 player.draw_lives(game.lives, &resources);
 
                 if game.lvl_num == 3 {
@@ -326,7 +346,7 @@ async fn main() {
                 }
 
                 player.draw_lives(game.lives, &resources);
-                draw_score(&resources.font, &game.score.to_string());
+                draw_score(&resources.font, &game.score.to_string(), &game.high_score.to_string());
 
                 for animation in &mut die_animations {
                     animation.draw(&resources);
@@ -339,19 +359,47 @@ async fn main() {
                         player.y = PLAYER_START_Y_POS;
                         player.dir = PlayerDir::Left;
 
-                        enemies.clear();
-                        eyes.clear();
-                        game.last_enemy_released = get_time();
-                        spawn_enemies(&mut enemies, game.amount_of_enemy, &points);
+                        enemies = spawn_enemies(&points, &game);
+                        last_release_time = get_time();
+                        ghosts_released = 0;
+                        if !enemies.is_empty() {
+                            enemies[0].release();
+                            ghosts_released = 1;
+                            last_release_time = get_time();
+                        }
 
                         game_state = GameState::Game;
                     } else {
+                        game.update_high_score();
                         game_state = GameState::GameOver;
                     }
                 }
             },
             GameState::GameOver => {
                 draw_map(&points, &mut game);
+
+                draw_text_ex(
+                    "GAME OVER",
+                    380.0, 400.0,
+                    TextParams {
+                        font: Some(&resources.font),
+                        font_size: 60,
+                        color: RED,
+                        ..Default::default()
+                    },
+                );
+
+                draw_text_ex(
+                    &format!("HIGH SCORE: {}", game.high_score),
+                    350.0, 470.0,
+                    TextParams {
+                        font: Some(&resources.font),
+                        font_size: 40,
+                        color: YELLOW,
+                        ..Default::default()
+                    },
+                );
+
                 show_press_space_text(&resources.font);
 
                 if is_key_pressed(KeyCode::Space) {
@@ -360,15 +408,11 @@ async fn main() {
             },
         };
 
-        let _ = dt_scale;
-
         small_coins.retain(|x| !x.destroyed);
         big_coins.retain(|x| !x.destroyed);
         bonuses.retain(|x| !x.destroyed);
-        enemies.retain(|x| !x.destroyed);
         die_animations.retain(|x| !x.destroyed);
         bonus_animations.retain(|x| !x.destroyed);
-        eyes.retain(|x| !x.destroyed);
 
         next_frame().await
     }
