@@ -21,16 +21,14 @@ pub fn draw_score(font: &Font, score: &str) {
     );
 }
 
-// get and return value from the map
-pub fn get_val(check_x: i32, check_y: i32, points: &Vec<Point>) -> String {
-    let result = match points.iter().position(|x| x.x == check_x && x.y == check_y) {
+pub fn get_val(check_x: i32, check_y: i32, points: &[Point]) -> String {
+    match points.iter().position(|x| x.x == check_x && x.y == check_y) {
         Some(idx) => points[idx].value.to_string(),
         _ => String::from("empty"),
-    };
-    return result
+    }
 }
 
-pub fn draw_map(points: &Vec<Point>, game: &mut Game) {
+pub fn draw_map(points: &[Point], game: &mut Game) {
     for point in points {
         match point.value.as_str() {
             "#" => {
@@ -103,19 +101,16 @@ pub fn make_map_array(lvl_num: i32) -> Vec<Point> {
         ],
         _ => panic!("no such level"),
     };
-    
-    let mut mx: i32 = 0;
+
     let mut my: i32 = 0;
     for line in map {
+        let mut mx: i32 = 0;
         for c in line.chars() {
-            points.push(
-                Point::new(mx,my,c.to_string()),
-            );
+            points.push(Point::new(mx, my, c.to_string()));
             mx += 1;
         }
         my += 1;
-        mx = 0;
     }
 
-    return points
+    points
 }

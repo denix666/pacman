@@ -25,10 +25,11 @@ pub struct Game {
     pub spawn_gate_y: f32,
     pub last_enemy_released: f64,
     pub amount_of_enemy: i32,
+    pub next_life_at: i32,
 }
 
 impl Game {
-    pub async fn new()  -> Self {
+    pub fn new() -> Self {
         Self {
             lvl_num: 0,
             score: 0,
@@ -41,6 +42,7 @@ impl Game {
             spawn_gate_y: 0.0,
             last_enemy_released: 0.0,
             amount_of_enemy: STARTING_AMOUNT_OF_ENEMY,
+            next_life_at: 10000,
         }
     }
 }

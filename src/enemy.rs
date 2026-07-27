@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 use ::rand::seq::IndexedRandom;
 
 use crate::game::Game;
+use crate::resources::Resources;
 
 const ANIMATION_SPEED: i32 = 8;
 pub const ENEMY_STEP_MOVE: f32 = 5.0;
@@ -18,103 +19,31 @@ pub struct Enemy {
     pub y: f32,
     pub destroyed: bool,
     pub rect: Rect,
-    down_textures: Vec<Texture2D>,
-    up_textures: Vec<Texture2D>,
-    left_textures: Vec<Texture2D>,
-    right_textures: Vec<Texture2D>,
-    scared_down_textures: Vec<Texture2D>,
-    scared_up_textures: Vec<Texture2D>,
-    scared_left_textures: Vec<Texture2D>,
-    scared_right_textures: Vec<Texture2D>,
-    update_interval: i32,
     pub scared_mode: bool,
-    cur_frame: usize,
     pub speed: f32,
     pub inside_spawn: bool,
     pub dir: EnemyDir,
-    pub possible_moves_list: Vec<String>,
     pub can_cross_gate: bool,
+    color_idx: usize,
+    update_interval: i32,
+    cur_frame: usize,
+    possible_moves_list: Vec<String>,
 }
 
 impl Enemy {
-    pub async fn new(x:f32, y:f32)  -> Self {
-        let mut down_sprites:Vec<Texture2D> = Vec::new();
-        let mut up_sprites:Vec<Texture2D> = Vec::new();
-        let mut left_sprites:Vec<Texture2D> = Vec::new();
-        let mut right_sprites:Vec<Texture2D> = Vec::new();
-
-        let enemy_type: &str = match ::rand::random_range(0..=3) {
-            0 => "red",
-            1 => "blue",
-            2 => "pinc",
-            _ => "green",
-        };
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/{}_down_{}.png",enemy_type, i);
-            down_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/{}_up_{}.png",enemy_type, i);
-            up_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/{}_left_{}.png",enemy_type, i);
-            left_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/{}_right_{}.png",enemy_type, i);
-            right_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        let mut scared_down_sprites:Vec<Texture2D> = Vec::new();
-        let mut scared_up_sprites:Vec<Texture2D> = Vec::new();
-        let mut scared_left_sprites:Vec<Texture2D> = Vec::new();
-        let mut scared_right_sprites:Vec<Texture2D> = Vec::new();
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/scared_down_{}.png", i);
-            scared_down_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/scared_up_{}.png", i);
-            scared_up_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/scared_left_{}.png", i);
-            scared_left_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        for i in 0..=1 {
-            let path = format!("assets/images/enemy/scared_right_{}.png", i);
-            scared_right_sprites.push(load_texture(&path).await.unwrap());
-        }
-
-        let dir: EnemyDir = match ::rand::random_range(0..=3) {
+    pub fn new(x: f32, y: f32) -> Self {
+        let color_idx = ::rand::random_range(0..=3_usize);
+        let dir = match ::rand::random_range(0..=3) {
             0 => EnemyDir::Down,
             1 => EnemyDir::Left,
             2 => EnemyDir::Right,
             _ => EnemyDir::Up,
         };
 
-
         Self {
             x,
             y,
             destroyed: false,
-            down_textures: down_sprites,
-            up_textures: up_sprites,
-            left_textures: left_sprites,
-            right_textures: right_sprites,
-            scared_down_textures: scared_down_sprites,
-            scared_up_textures: scared_up_sprites,
-            scared_left_textures: scared_left_sprites,
-            scared_right_textures: scared_right_sprites,
             rect: Rect::new(0.0, 0.0, 50.0, 50.0),
             update_interval: 0,
             cur_frame: 0,
@@ -124,145 +53,125 @@ impl Enemy {
             possible_moves_list: vec![],
             speed: ENEMY_STEP_MOVE,
             can_cross_gate: false,
+            color_idx,
         }
     }
 
-    pub fn update(&mut self, points: &Vec<crate::points::Point>, game: &Game) {
+    pub fn update(&mut self, points: &[crate::points::Point], game: &Game) {
         self.possible_moves_list.clear();
 
         match self.dir {
             EnemyDir::Up => {
-                let check_x: i32 = (self.x / 50.0) as i32;
-                let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
-                if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                    if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                let check_x = (self.x / 50.0) as i32;
+                let check_y = ((self.y - 5.0) / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y, points) != "#" {
+                    if crate::levels::get_val(check_x, check_y, points) != "-" {
                         self.y -= self.speed;
-                    } else {
-                        if self.can_cross_gate {
-                            self.y -= self.speed;
-                        }
+                    } else if self.can_cross_gate {
+                        self.y -= self.speed;
                     }
                 }
 
                 if self.y % 50.0 == 0.0 {
-                    let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
-                            self.possible_moves_list.push("left".to_string());
-                        }
+                    let check_x = ((self.x - 5.0) / 50.0) as i32;
+                    let check_y = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y, points) != "-" {
+                        self.possible_moves_list.push("left".to_string());
                     }
 
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
-                            self.possible_moves_list.push("right".to_string());
-                        }
+                    let check_x = (self.x / 50.0) as i32;
+                    if crate::levels::get_val(check_x + 1, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x + 1, check_y, points) != "-" {
+                        self.possible_moves_list.push("right".to_string());
                     }
                 }
             },
             EnemyDir::Down => {
-                let check_x: i32 = (self.x / 50.0) as i32;
-                let check_y: i32 = (self.y / 50.0) as i32;
-                if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                    if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
+                let check_x = (self.x / 50.0) as i32;
+                let check_y = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y + 1, points) != "#" {
+                    if crate::levels::get_val(check_x, check_y + 1, points) != "-" {
                         self.y += self.speed;
-                    } else {
-                        if self.can_cross_gate {
-                            self.y += self.speed;
-                        }
+                    } else if self.can_cross_gate {
+                        self.y += self.speed;
                     }
                 }
 
                 if self.y % 50.0 == 0.0 {
-                    let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
-                            self.possible_moves_list.push("left".to_string());
-                        }
+                    let check_x = ((self.x - 5.0) / 50.0) as i32;
+                    let check_y = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y, points) != "-" {
+                        self.possible_moves_list.push("left".to_string());
                     }
 
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
-                            self.possible_moves_list.push("right".to_string());
-                        }
+                    let check_x = (self.x / 50.0) as i32;
+                    if crate::levels::get_val(check_x + 1, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x + 1, check_y, points) != "-" {
+                        self.possible_moves_list.push("right".to_string());
                     }
                 }
             },
             EnemyDir::Left => {
-                let check_x: i32 = ((self.x - 5.0) / 50.0) as i32;
-                let check_y: i32 = (self.y / 50.0) as i32;
-                if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                    if crate::levels::get_val(check_x, check_y, &points) != "-" {
+                let check_x = ((self.x - 5.0) / 50.0) as i32;
+                let check_y = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x, check_y, points) != "#" {
+                    if crate::levels::get_val(check_x, check_y, points) != "-" {
                         self.x -= self.speed;
-                    } else {
-                        if self.can_cross_gate {
-                            self.x -= self.speed;
-                        }
+                    } else if self.can_cross_gate {
+                        self.x -= self.speed;
                     }
                 }
 
                 if self.x % 50.0 == 0.0 {
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
-                            self.possible_moves_list.push("up".to_string());
-                        }
+                    let check_x = (self.x / 50.0) as i32;
+                    let check_y = ((self.y - 5.0) / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y, points) != "-" {
+                        self.possible_moves_list.push("up".to_string());
                     }
 
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
-                            self.possible_moves_list.push("down".to_string());
-                        }
+                    let check_y = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y + 1, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y + 1, points) != "-" {
+                        self.possible_moves_list.push("down".to_string());
                     }
                 }
             },
             EnemyDir::Right => {
-                let check_x: i32 = (self.x / 50.0) as i32;
-                let check_y: i32 = (self.y / 50.0) as i32;
-                if crate::levels::get_val(check_x + 1, check_y, &points) != "#" {
-                    if crate::levels::get_val(check_x + 1, check_y, &points) != "-" {
+                let check_x = (self.x / 50.0) as i32;
+                let check_y = (self.y / 50.0) as i32;
+                if crate::levels::get_val(check_x + 1, check_y, points) != "#" {
+                    if crate::levels::get_val(check_x + 1, check_y, points) != "-" {
                         self.x += self.speed;
-                    } else {
-                        if self.can_cross_gate {
-                            self.x += self.speed;
-                        }
+                    } else if self.can_cross_gate {
+                        self.x += self.speed;
                     }
                 }
 
                 if self.x % 50.0 == 0.0 {
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = ((self.y - 5.0) / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y, &points) != "-" {
-                            self.possible_moves_list.push("up".to_string());
-                        }
+                    let check_x = (self.x / 50.0) as i32;
+                    let check_y = ((self.y - 5.0) / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y, points) != "-" {
+                        self.possible_moves_list.push("up".to_string());
                     }
 
-                    let check_x: i32 = (self.x / 50.0) as i32;
-                    let check_y: i32 = (self.y / 50.0) as i32;
-                    if crate::levels::get_val(check_x, check_y + 1, &points) != "#" {
-                        if crate::levels::get_val(check_x, check_y + 1, &points) != "-" {
-                            self.possible_moves_list.push("down".to_string());
-                        }
+                    let check_y = (self.y / 50.0) as i32;
+                    if crate::levels::get_val(check_x, check_y + 1, points) != "#" &&
+                        crate::levels::get_val(check_x, check_y + 1, points) != "-" {
+                        self.possible_moves_list.push("down".to_string());
                     }
                 }
             },
         }
 
-        if crate::levels::get_val((self.x / 50.0) as i32, (self.y / 50.0) as i32, &points) != "s" {
+        if crate::levels::get_val((self.x / 50.0) as i32, (self.y / 50.0) as i32, points) != "s" {
             self.inside_spawn = false;
         }
 
         if self.inside_spawn && self.can_cross_gate {
-            // get out from spawn
             if self.x >= game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "left") {
                 self.dir = EnemyDir::Left;
             } else if self.x < game.spawn_gate_x && self.possible_moves_list.iter().any(|a| a == "right") {
@@ -272,72 +181,46 @@ impl Enemy {
             } else if self.possible_moves_list.iter().any(|a| a == "down") {
                 self.dir = EnemyDir::Up;
             }
-        } else {
-            if self.possible_moves_list.len() > 0 {
-                match self.possible_moves_list.choose(&mut ::rand::rng()).unwrap().as_str() {
-                    "up" => {
-                        self.dir = EnemyDir::Up;
-                    },
-                    "down" => {
-                        self.dir = EnemyDir::Down;
-                    },
-                    "left" => {
-                        self.dir = EnemyDir::Left;
-                    },
-                    "right" => {
-                        self.dir = EnemyDir::Right;
-                    },
-                    _ => {
-                        panic!("unknown dir");
-                    }
-                };
-            }
+        } else if !self.possible_moves_list.is_empty() {
+            match self.possible_moves_list.choose(&mut ::rand::rng()).unwrap().as_str() {
+                "up" => self.dir = EnemyDir::Up,
+                "down" => self.dir = EnemyDir::Down,
+                "left" => self.dir = EnemyDir::Left,
+                "right" => self.dir = EnemyDir::Right,
+                _ => panic!("unknown dir"),
+            };
         }
 
-        // define rect
         self.rect.x = self.x;
         self.rect.y = self.y;
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, res: &Resources) {
         self.update_interval += 1;
         if self.update_interval > ANIMATION_SPEED {
             self.update_interval = 0;
             self.cur_frame += 1;
-            if self.cur_frame == self.up_textures.len() {
+            if self.cur_frame >= 2 {
                 self.cur_frame = 0;
             }
         }
 
-        match self.dir {
-            EnemyDir::Up => {
-                if !self.scared_mode {
-                    draw_texture(&self.up_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(&self.scared_up_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
-            },
-            EnemyDir::Down => {
-                if !self.scared_mode {
-                    draw_texture(&self.down_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(&self.scared_down_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
-            },
-            EnemyDir::Left => {
-                if !self.scared_mode {
-                    draw_texture(&self.left_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(&self.scared_left_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
-            },
-            EnemyDir::Right => {
-                if !self.scared_mode {
-                    draw_texture(&self.right_textures[self.cur_frame], self.x, self.y, WHITE);
-                } else {
-                    draw_texture(&self.scared_right_textures[self.cur_frame], self.x, self.y, WHITE);
-                }
-            },
-        }
+        let texture = if self.scared_mode {
+            match self.dir {
+                EnemyDir::Up => &res.scared_up[self.cur_frame],
+                EnemyDir::Down => &res.scared_down[self.cur_frame],
+                EnemyDir::Left => &res.scared_left[self.cur_frame],
+                EnemyDir::Right => &res.scared_right[self.cur_frame],
+            }
+        } else {
+            let et = &res.enemy_textures[self.color_idx];
+            match self.dir {
+                EnemyDir::Up => &et.up[self.cur_frame],
+                EnemyDir::Down => &et.down[self.cur_frame],
+                EnemyDir::Left => &et.left[self.cur_frame],
+                EnemyDir::Right => &et.right[self.cur_frame],
+            }
+        };
+        draw_texture(texture, self.x, self.y, WHITE);
     }
 }
