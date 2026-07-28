@@ -103,7 +103,7 @@ async fn main() {
                 if game.high_score > 0 {
                     draw_text_ex(
                         &format!("HIGH SCORE: {}", game.high_score),
-                        350.0, 500.0,
+                        390.0, 500.0,
                         TextParams {
                             font: Some(&resources.font),
                             font_size: 35,
@@ -352,6 +352,8 @@ async fn main() {
                     animation.draw(&resources);
                 }
 
+                show_press_space_text(&resources.font);
+
                 if die_animations.is_empty() && is_key_pressed(KeyCode::Space) {
                     if game.lives > 0 {
                         game.lives -= 1;
@@ -391,7 +393,7 @@ async fn main() {
 
                 draw_text_ex(
                     &format!("HIGH SCORE: {}", game.high_score),
-                    350.0, 470.0,
+                    390.0, 470.0,
                     TextParams {
                         font: Some(&resources.font),
                         font_size: 40,
