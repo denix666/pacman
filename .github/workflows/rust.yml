@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Prep
-      run: sudo apt-get install libasound-dev -y
-      
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build
       run: cargo build --release
 
@@ -21,34 +18,28 @@ jobs:
       run: |
         mv target/release/rusted-pacman rusted-pacman
         chmod 777 rusted-pacman
-        tar cpfz rusted-pacman.tar.gz rusted-pacman assets
-        
+        tar cpfz rusted-pacman_linux_x86_64.tar.gz rusted-pacman
+
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: rusted-pacman.tar.gz
+        files: rusted-pacman_linux_x86_64.tar.gz
 
   win_build:
     runs-on: windows-latest
-    steps:
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        target: x86_64-pc-windows-msvc
-        override: true
 
-    - uses: actions/checkout@v3
+    steps:
+    - uses: actions/checkout@v4
     - name: Build
       run: cargo build --release
 
-    - shell: bash
+    - name: Prepare artifact
+      shell: pwsh
       run: |
-        mv target/release/rusted-pacman rusted-pacman
-        7z a rusted-pacman.zip rusted-pacman.exe assets
-        
+        Move-Item target/release/rusted-pacman.exe rusted-pacman.exe
+        Compress-Archive -Path rusted-pacman.exe -DestinationPath rusted-pacman_windows_x86_64.zip
+
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: rusted-pacman.zip
+        files: rusted-pacman_windows_x86_64.zip
