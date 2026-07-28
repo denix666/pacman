@@ -10,12 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install Linux build dependencies
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release
+
+    - name: Install Linux build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config \
+          libasound2-dev libasound2 libx11-dev libxrandr-dev libxinerama-dev \
+          libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libudev-dev
+        # show that libasound was installed and available
+        ls -l /usr/lib/x86_64-linux-gnu/libasound*
+        ldconfig -p | grep asound || true
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+
+    - name: Build (verbose)
+      run: |
+        # -vv to show full linker command; helpful for debugging missing -l flags
+        cargo build --release -vv
 
     - shell: bash
       run: |
